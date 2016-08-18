@@ -13,6 +13,7 @@ import openfl.display.GradientType;
 import openfl.display.Graphics;
 import openfl.display.InterpolationMethod;
 import openfl.display.SpreadMethod;
+import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
@@ -107,8 +108,8 @@ class CanvasGraphics {
 	}
 	
 	
-	private static function createGradientPattern (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix, spreadMethod:SpreadMethod, interpolationMethod:InterpolationMethod, focalPointRatio:Float) {
-		
+	private static function createGradientPattern (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix, spreadMethod:SpreadMethod, interpolationMethod:InterpolationMethod, focalPointRatio:Float, colorTransform:ColorTransform) {
+	
 		#if (js && html5)
 		
 		var gradientFill = null;
@@ -132,21 +133,22 @@ class CanvasGraphics {
 			
 		}
 		
-		for (i in 0...colors.length) {
-			
-			var rgb = colors[i];
-			var alpha = alphas[i];
-			var r = (rgb & 0xFF0000) >>> 16;
-			var g = (rgb & 0x00FF00) >>> 8;
-			var b = (rgb & 0x0000FF);
+
+		for (i in 0...colors.length) ColorTransform.__with_var_rgba(colors[i], alphas[i],
+		{
+			var r:Float = r;
+			var g:Float = g;
+			var b:Float = b;
 			
 			var ratio = ratios[i] / 0xFF;
 			if (ratio < 0) ratio = 0;
 			if (ratio > 1) ratio = 1;
-			
-			gradientFill.addColorStop (ratio, "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")");
-			
-		}
+
+			if (colorTransform != null)
+				colorTransform.__apply_to_var_rgba();
+
+			gradientFill.addColorStop (ratio, "rgba(" + r + ", " + g + ", " + b + ", " + a + ")");
+		});
 		
 		return cast (gradientFill);
 		
@@ -217,22 +219,22 @@ class CanvasGraphics {
 	}
 	
 	
-	private static function endFill ():Void {
+	private static function endFill (colorTransform:ColorTransform):Void {
 		
 		#if (js && html5)
 		context.beginPath ();
-		playCommands (fillCommands, false);
+		playCommands (fillCommands, colorTransform, false);
 		fillCommands.clear ();
 		#end
 		
 	}
 	
 	
-	private static function endStroke ():Void {
+	private static function endStroke (colorTransform:ColorTransform):Void {
 		
 		#if (js && html5)
 		context.beginPath ();
-		playCommands (strokeCommands, true);
+		playCommands (strokeCommands, colorTransform, true);
 		context.closePath ();
 		strokeCommands.clear ();
 		#end
@@ -325,8 +327,8 @@ class CanvasGraphics {
 					case END_FILL:
 						
 						data.readEndFill ();
-						endFill ();
-						endStroke ();
+						endFill (null);
+						endStroke (null);
 						
 						if (hasFill && context.isPointInPath (x, y)) {
 							
@@ -347,8 +349,8 @@ class CanvasGraphics {
 					
 					case BEGIN_BITMAP_FILL, BEGIN_FILL, BEGIN_GRADIENT_FILL:
 						
-						endFill ();
-						endStroke ();
+						endFill (null);
+						endStroke (null);
 						
 						if (hasFill && context.isPointInPath (x, y)) {
 							
@@ -418,13 +420,13 @@ class CanvasGraphics {
 			
 			if (fillCommands.length > 0) {
 				
-				endFill ();
+				endFill (null);
 				
 			}
 			
 			if (strokeCommands.length > 0) {
 				
-				endStroke ();
+				endStroke (null);
 				
 			}
 			
@@ -507,7 +509,7 @@ class CanvasGraphics {
 	}
 	
 	
-	private static function playCommands (commands:DrawCommandBuffer, stroke:Bool = false):Void {
+	private static function playCommands (commands:DrawCommandBuffer, colorTransform:ColorTransform, stroke:Bool = false):Void {
 		
 		#if (js && html5)
 		bounds = graphics.__bounds;
@@ -621,20 +623,7 @@ class CanvasGraphics {
 						});
 						
 						context.miterLimit = c.miterLimit;
-						
-						if (c.alpha == 1) {
-							
-							context.strokeStyle = "#" + StringTools.hex (c.color & 0x00FFFFFF, 6);
-							
-						} else {
-							
-							var r = (c.color & 0xFF0000) >>> 16;
-							var g = (c.color & 0x00FF00) >>> 8;
-							var b = (c.color & 0x0000FF);
-							
-							context.strokeStyle = "rgba(" + r + ", " + g + ", " + b + ", " + c.alpha + ")";
-							
-						}
+						context.strokeStyle = CanvasUtils.rgbaStyle(colorTransform, c.color, c.alpha);
 						
 						setSmoothing (true);
 						hasStroke = true;
@@ -651,7 +640,7 @@ class CanvasGraphics {
 					}
 					
 					context.moveTo (positionX - offsetX, positionY - offsetY);
-					context.strokeStyle = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio);
+					context.strokeStyle = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio, colorTransform);
 					
 					setSmoothing (true);
 					hasStroke = true;
@@ -699,19 +688,7 @@ class CanvasGraphics {
 						
 					} else {
 						
-						if (c.alpha == 1) {
-							
-							context.fillStyle = "#" + StringTools.hex (c.color, 6);
-							
-						} else {
-							
-							var r = (c.color & 0xFF0000) >>> 16;
-							var g = (c.color & 0x00FF00) >>> 8;
-							var b = (c.color & 0x0000FF);
-							
-							context.fillStyle = "rgba(" + r + ", " + g + ", " + b + ", " + c.alpha + ")";
-							
-						}
+						context.fillStyle = CanvasUtils.rgbaStyle(colorTransform, c.color, c.alpha);
 						
 						bitmapFill = null;
 						setSmoothing (true);
@@ -722,7 +699,7 @@ class CanvasGraphics {
 				case BEGIN_GRADIENT_FILL:
 					
 					var c = data.readBeginGradientFill ();
-					context.fillStyle = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio);
+					context.fillStyle = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio, colorTransform);
 					
 					bitmapFill = null;
 					setSmoothing (true);
@@ -838,7 +815,7 @@ class CanvasGraphics {
 	}
 	
 	
-	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix):Void {
+	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
 		
 		#if (js && html5)
 		
@@ -919,8 +896,8 @@ class CanvasGraphics {
 						case END_FILL:
 							
 							data.readEndFill ();
-							endFill ();
-							endStroke ();
+							endFill (colorTransform);
+							endStroke (colorTransform);
 							hasFill = false;
 							bitmapFill = null;
 						
@@ -941,8 +918,8 @@ class CanvasGraphics {
 						
 						case BEGIN_BITMAP_FILL, BEGIN_FILL, BEGIN_GRADIENT_FILL:
 							
-							endFill ();
-							endStroke ();
+							endFill (colorTransform);
+							endStroke (colorTransform);
 							
 							if (type == BEGIN_BITMAP_FILL) {
 								
@@ -990,8 +967,8 @@ class CanvasGraphics {
 						
 						case DRAW_TRIANGLES:
 							
-							endFill ();
-							endStroke ();
+							endFill (colorTransform);
+							endStroke (colorTransform);
 							
 							var c = data.readDrawTriangles ();
 							
@@ -1161,13 +1138,13 @@ class CanvasGraphics {
 				
 				if (fillCommands.length > 0) {
 					
-					endFill ();
+					endFill (colorTransform);
 					
 				}
 				
 				if (strokeCommands.length > 0) {
 					
-					endStroke ();
+					endStroke (colorTransform);
 					
 				}
 				
