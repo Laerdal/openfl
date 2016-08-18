@@ -20,6 +20,7 @@ import openfl.display.GradientType;
 import openfl.display.Graphics;
 import openfl.display.InterpolationMethod;
 import openfl.display.SpreadMethod;
+import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
@@ -89,7 +90,18 @@ class CairoGraphics {
 	}
 	
 	
-	private static function createGradientPattern (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix, spreadMethod:SpreadMethod, interpolationMethod:InterpolationMethod, focalPointRatio:Float):CairoPattern {
+	private static function createRGBAPattern(colorTransform : ColorTransform, input_rgb : Int, input_a : Float) : CairoPattern
+	{
+		return CairoUtils.applyColorTransform(colorTransform, input_rgb, input_a, 
+			if (a >= 1.0)
+				CairoPattern.createRGB  (r, g, b)
+			else
+				CairoPattern.createRGBA (r, g, b, a)
+		);
+	}
+
+	
+	private static function createGradientPattern (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix, spreadMethod:SpreadMethod, interpolationMethod:InterpolationMethod, focalPointRatio:Float, colorTransform:ColorTransform):CairoPattern {
 		
 		var pattern:CairoPattern = null;
 		
@@ -121,22 +133,15 @@ class CairoGraphics {
 				pattern = CairoPattern.createLinear (point1.x, point1.y, point2.x, point2.y);
 			
 		}
-		
-		for (i in 0...colors.length) {
-			
-			var rgb = colors[i];
-			var alpha = alphas[i];
-			var r = ((rgb & 0xFF0000) >>> 16) / 0xFF;
-			var g = ((rgb & 0x00FF00) >>> 8) / 0xFF;
-			var b = (rgb & 0x0000FF) / 0xFF;
-			
+
+		for (i in 0...colors.length) CairoUtils.applyColorTransform(colorTransform, colors[i], alphas[i],
+		{
 			var ratio = ratios[i] / 0xFF;
 			if (ratio < 0) ratio = 0;
 			if (ratio > 1) ratio = 1;
 			
-			pattern.addColorStopRGBA (ratio, r, g, b, alpha);
-			
-		}
+			pattern.addColorStopRGBA (ratio, r, g, b, a);
+		});
 		
 		var mat = pattern.matrix;
 		
@@ -202,19 +207,19 @@ class CairoGraphics {
 	}
 	
 	
-	private static function endFill ():Void {
+	private static function endFill (colorTransform:ColorTransform):Void {
 		
 		cairo.newPath ();
-		playCommands (fillCommands, false);
+		playCommands (fillCommands, colorTransform, false);
 		fillCommands.clear ();
 		
 	}
 	
 	
-	private static function endStroke ():Void {
+	private static function endStroke (colorTransform:ColorTransform):Void {
 		
 		cairo.newPath ();
-		playCommands (strokeCommands, true);
+		playCommands (strokeCommands, colorTransform, true);
 		cairo.closePath ();
 		strokeCommands.clear ();
 		
@@ -308,8 +313,8 @@ class CairoGraphics {
 					case END_FILL:
 						
 						data.readEndFill ();
-						endFill ();
-						endStroke ();
+						endFill (null);
+						endStroke (null);
 						
 						if (hasFill && cairo.inFill (x, y)) {
 							
@@ -330,8 +335,8 @@ class CairoGraphics {
 					
 					case BEGIN_BITMAP_FILL, BEGIN_FILL, BEGIN_GRADIENT_FILL:
 						
-						endFill ();
-						endStroke ();
+						endFill (null);
+						endStroke (null);
 						
 						if (hasFill && cairo.inFill (x, y)) {
 							
@@ -401,13 +406,13 @@ class CairoGraphics {
 			
 			if (fillCommands.length > 0) {
 				
-				endFill ();
+				endFill (null);
 				
 			}
 			
 			if (strokeCommands.length > 0) {
 				
-				endStroke ();
+				endStroke (null);
 				
 			}
 			
@@ -489,7 +494,7 @@ class CairoGraphics {
 	}
 	
 	
-	private static function playCommands (commands:DrawCommandBuffer, stroke:Bool = false):Void {
+	private static function playCommands (commands:DrawCommandBuffer, colorTransform:ColorTransform, stroke:Bool = false):Void {
 		
 		if (commands.length == 0) return;
 		
@@ -649,20 +654,8 @@ class CairoGraphics {
 						}
 						
 						cairo.miterLimit = c.miterLimit;
-						
-						var r = ((c.color & 0xFF0000) >>> 16) / 0xFF;
-						var g = ((c.color & 0x00FF00) >>> 8) / 0xFF;
-						var b = (c.color & 0x0000FF) / 0xFF;
-						
-						if (c.alpha == 1) {
-							
-							strokePattern = CairoPattern.createRGB (r, g, b);
-							
-						} else {
-							
-							strokePattern = CairoPattern.createRGBA (r, g, b, c.alpha);
-							
-						}
+
+						strokePattern = createRGBAPattern(colorTransform, c.color, c.alpha);
 						
 					}
 				
@@ -671,12 +664,12 @@ class CairoGraphics {
 					var c = data.readLineGradientStyle ();
 					if (stroke && hasStroke) {
 						
-						closePath ();
+						closePath (hasStroke);
 						
 					}
 					
 					cairo.moveTo (positionX - offsetX, positionY - offsetY);
-					strokePattern = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio);
+					strokePattern = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio, colorTransform);
 					
 					hasStroke = true;
 				
@@ -685,7 +678,7 @@ class CairoGraphics {
 					var c = data.readLineBitmapStyle ();
 					if (stroke && hasStroke) {
 						
-						closePath ();
+						closePath (hasStroke);
 						
 					}
 					
@@ -719,7 +712,7 @@ class CairoGraphics {
 							
 						}
 						
-						fillPattern = CairoPattern.createRGBA (((c.color & 0xFF0000) >>> 16) / 0xFF, ((c.color & 0x00FF00) >>> 8) / 0xFF, (c.color & 0x0000FF) / 0xFF, c.alpha);
+						fillPattern = createRGBAPattern(colorTransform, c.color, c.alpha);
 						hasFill = true;
 						
 					}
@@ -735,7 +728,7 @@ class CairoGraphics {
 						
 					}
 					
-					fillPattern = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio);
+					fillPattern = createGradientPattern (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio, colorTransform);
 					
 					hasFill = true;
 					bitmapFill = null;
@@ -1010,7 +1003,7 @@ class CairoGraphics {
 	}
 	
 	
-	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix):Void {
+	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
 		
 		#if lime_cairo
 		
@@ -1104,8 +1097,8 @@ class CairoGraphics {
 					case END_FILL:
 						
 						data.readEndFill ();
-						endFill ();
-						endStroke ();
+						endFill (colorTransform);
+						endStroke (colorTransform);
 						hasFill = false;
 						bitmapFill = null;
 					
@@ -1126,8 +1119,8 @@ class CairoGraphics {
 					
 					case BEGIN_BITMAP_FILL, BEGIN_FILL, BEGIN_GRADIENT_FILL:
 						
-						endFill ();
-						endStroke ();
+						endFill (colorTransform);
+						endStroke (colorTransform);
 						
 						if (type == BEGIN_BITMAP_FILL) {
 							
@@ -1188,13 +1181,13 @@ class CairoGraphics {
 			
 			if (fillCommands.length > 0) {
 				
-				endFill ();
+				endFill (colorTransform);
 				
 			}
 			
 			if (strokeCommands.length > 0) {
 				
-				endStroke ();
+				endStroke (colorTransform);
 				
 			}
 			

@@ -13,6 +13,7 @@ import openfl._internal.renderer.RenderSession;
 import openfl._internal.text.TextEngine;
 import openfl.display.BitmapData;
 import openfl.filters.GlowFilter;
+import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
 import openfl.text.TextField;
@@ -30,6 +31,21 @@ import openfl.text.TextFormat;
 
 
 class CairoTextField {
+
+
+	private static inline function setSourceRGB(cairo : Cairo, colorTransform : ColorTransform, input_rgb : Int) : Void
+	{
+		CairoUtils.applyColorTransform(colorTransform, input_rgb, 1.0,
+			cairo.setSourceRGB (r, g, b)
+		);
+	}
+	
+	private static inline function setSourceRGBA(cairo : Cairo, colorTransform : ColorTransform, input_rgb : Int, input_a : Float) : Void
+	{
+		CairoUtils.applyColorTransform(colorTransform, input_rgb, input_a,
+			cairo.setSourceRGBA (r, g, b, a)
+		);
+	}
 	
 	
 	public static function render (textField:TextField, renderSession:RenderSession, transform:Matrix) {
@@ -38,6 +54,7 @@ class CairoTextField {
 		
 		var textEngine = textField.__textEngine;
 		var bounds = textEngine.bounds;
+		var colorTransform = textField.__worldColorTransform.__isDefault() ? null : textField.__worldColorTransform;
 		var graphics = textField.__graphics;
 		var cairo = graphics.__cairo;
 		
@@ -150,24 +167,14 @@ class CairoTextField {
 			
 		} else {
 			
-			var color = textEngine.backgroundColor;
-			var r = ((color & 0xFF0000) >>> 16) / 0xFF;
-			var g = ((color & 0x00FF00) >>> 8) / 0xFF;
-			var b = (color & 0x0000FF) / 0xFF;
-			
-			cairo.setSourceRGB (r, g, b);
+			setSourceRGB(cairo, colorTransform, textEngine.backgroundColor);
 			cairo.fillPreserve ();
 			
 		}
 		
 		if (textEngine.border) {
 			
-			var color = textEngine.borderColor;
-			var r = ((color & 0xFF0000) >>> 16) / 0xFF;
-			var g = ((color & 0x00FF00) >>> 8) / 0xFF;
-			var b = (color & 0x0000FF) / 0xFF;
-			
-			cairo.setSourceRGB (r, g, b);
+			setSourceRGB(cairo, colorTransform, textEngine.borderColor);
 			cairo.lineWidth = 1;
 			cairo.stroke ();
 			
@@ -189,19 +196,15 @@ class CairoTextField {
 				
 			}
 			
-			var color, r, g, b, font, size, advance;
+			var font, size, advance;
 			
 			for (group in textEngine.layoutGroups) {
 				
 				if (group.lineIndex < textField.scrollV - 1) continue;
 				if (group.lineIndex > textField.scrollV + textEngine.bottomScrollV - 2) break;
 				
-				color = group.format.color;
-				r = ((color & 0xFF0000) >>> 16) / 0xFF;
-				g = ((color & 0x00FF00) >>> 8) / 0xFF;
-				b = (color & 0x0000FF) / 0xFF;
-				
-				cairo.setSourceRGB (r, g, b);
+				setSourceRGB(cairo, colorTransform, group.format.color);
+
 				
 				font = TextEngine.getFontInstance (group.format);
 				
@@ -262,21 +265,12 @@ class CairoTextField {
 							
 							var glowFilter:GlowFilter = cast textField.__filters[0];
 							
-							color = glowFilter.color;
-							r = ((color & 0xFF0000) >>> 16) / 0xFF;
-							g = ((color & 0x00FF00) >>> 8) / 0xFF;
-							b = (color & 0x0000FF) / 0xFF;
+							setSourceRGBA(cairo, colorTransform, glowFilter.color, glowFilter.alpha);
 							
-							cairo.setSourceRGBA (r, g, b, glowFilter.alpha);
 							cairo.lineWidth = Math.max (glowFilter.blurX, glowFilter.blurY);
 							cairo.strokePreserve ();
 							
-							color = group.format.color;
-							r = ((color & 0xFF0000) >>> 16) / 0xFF;
-							g = ((color & 0x00FF00) >>> 8) / 0xFF;
-							b = (color & 0x0000FF) / 0xFF;
-							
-							cairo.setSourceRGB (r, g, b);
+							setSourceRGB(cairo, colorTransform, group.format.color);
 							
 							cairo.fillPreserve ();
 							usedHack = true;
