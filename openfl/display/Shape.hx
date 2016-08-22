@@ -21,6 +21,13 @@ class Shape extends DisplayObject implements IShaderDrawable {
 		super ();
 		
 	}
+
+
+	public override function __setGraphicsDirty ():Void {
+
+		graphics.__dirty = true;
+		
+	}
 	
 	
 	

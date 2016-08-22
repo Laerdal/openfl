@@ -1468,6 +1468,14 @@ class TextField extends InteractiveObject implements IShaderDrawable {
 		}
 		
 	}
+
+
+	public override function __setGraphicsDirty ():Void {
+
+		__dirty = true;
+		
+	}
+
 	
 	
 	private function __updateText (value:String):Void {
