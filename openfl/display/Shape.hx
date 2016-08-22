@@ -20,6 +20,13 @@ class Shape extends DisplayObject {
 		super ();
 		
 	}
+
+
+	public override function __setGraphicsDirty ():Void {
+
+		graphics.__dirty = true;
+		
+	}
 	
 	
 	
