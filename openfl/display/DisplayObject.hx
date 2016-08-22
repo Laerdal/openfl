@@ -597,6 +597,13 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 		}
 		
 	}
+
+
+	private function __setGraphicsDirty ():Void {
+
+		// implemented in subclasses that have Graphics or renderable Text
+		
+	}
 	
 	
 	private function __setStageReference (stage:Stage):Void {
