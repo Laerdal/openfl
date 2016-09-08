@@ -111,7 +111,6 @@ class Stage extends DisplayObjectContainer implements IModule {
 	private var __mouseDownMiddle:InteractiveObject;
 	private var __mouseDownRight:InteractiveObject;
 	private var __mouseOutStack:Array<DisplayObject>;
-	private var __rollOutStack:Array<DisplayObject>;
 	private var __mouseX:Float;
 	private var __mouseY:Float;
 	private var __renderer:AbstractRenderer;
@@ -179,7 +178,6 @@ class Stage extends DisplayObjectContainer implements IModule {
 		__clearBeforeRender = true;
 		__stack = [];
 		__mouseOutStack = [];
-		__rollOutStack = [];
 		
 		stage3Ds = new Vector ();
 		stage3Ds.push (new Stage3D ());
@@ -1137,53 +1135,24 @@ class Stage extends DisplayObjectContainer implements IModule {
 				
 				localPoint = target.globalToLocal (targetPoint);
 				event = MouseEvent.__create (MouseEvent.MOUSE_OUT, button, __mouseX, __mouseY, localPoint, cast target);
-				event.bubbles = true;
-				target.__dispatchEvent (event);
-				
-			}
-			
-		}
-
-		for (target in __rollOutStack) {
-			
-			if (stack.indexOf (target) == -1) {
-				
-				__rollOutStack.remove (target);
-				
-				localPoint = target.globalToLocal (targetPoint);
-				event = MouseEvent.__create (MouseEvent.ROLL_OUT, button, __mouseX, __mouseY, localPoint, cast target);
 				event.bubbles = false;
 				target.__dispatchEvent (event);
-								
+				
 			}
 			
 		}
 		
 		for (target in stack) {
 			
-			if (__rollOutStack.indexOf (target) == -1) {
-					
-				if (target.hasEventListener (MouseEvent.ROLL_OVER)) {
-					localPoint = target.globalToLocal (targetPoint);
-					event = MouseEvent.__create (MouseEvent.ROLL_OVER, button, __mouseX, __mouseY, localPoint, cast target);
-					event.bubbles = false;
-					target.__dispatchEvent (event);
-				}
-
-				if (target.hasEventListener (MouseEvent.ROLL_OUT)) {
-					
-					__rollOutStack.push (target);
-					
-				}
-			}
-			
 			if (__mouseOutStack.indexOf (target) == -1) {
-					
+				
 				if (target.hasEventListener (MouseEvent.MOUSE_OVER)) {
+					
 					localPoint = target.globalToLocal (targetPoint);
 					event = MouseEvent.__create (MouseEvent.MOUSE_OVER, button, __mouseX, __mouseY, localPoint, cast target);
-					event.bubbles = true;
+					event.bubbles = false;
 					target.__dispatchEvent (event);
+					
 				}
 				
 				if (target.hasEventListener (MouseEvent.MOUSE_OUT)) {
