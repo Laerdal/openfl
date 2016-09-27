@@ -85,6 +85,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 	private var __blendMode:BlendMode;
 	private var __cacheAsBitmap:Bool;
 	private var __cacheAsBitmapMatrix:Matrix;
+	private var __renderedAsCachedBitmap:Bool;
+	private var __cachedBitmap:BitmapData;
 	private var __cairo:Cairo;
 	private var __children:Array<DisplayObject>;
 	private var __filters:Array<BitmapFilter>;
@@ -102,6 +104,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 	private var __renderTransform:Matrix;
 	private var __renderTransformCache:Matrix;
 	private var __renderTransformChanged:Bool;
+	private var __renderedMask:BitmapData;
 	private var __rotation:Float;
 	private var __rotationCosine:Float;
 	private var __rotationSine:Float;
