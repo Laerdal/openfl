@@ -79,6 +79,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	public var __worldColorTransform:ColorTransform;
 	public var __worldTransform:Matrix;
 	
+	private var __renderedAsCachedBitmap:Bool;
+	private var __cachedBitmap:BitmapData;
 	private var __alpha:Float;
 	private var __blendMode:BlendMode;
 	private var __cacheAsBitmap:Bool;
@@ -97,6 +99,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	private var __renderDirty:Bool;
 	private var __renderParent:DisplayObject;
 	private var __renderTransform:Matrix;
+	private var __renderedMask:BitmapData;
 	private var __rotation:Float;
 	private var __rotationCosine:Float;
 	private var __rotationSine:Float;
