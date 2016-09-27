@@ -14,6 +14,7 @@ class AbstractShaderManager {
 	
 	public var currentShader (default, null):Shader;
 	public var defaultShader:Shader;
+	public var defaultMaskingShader:Shader;
 	
 	
 	public function new () {
@@ -29,5 +30,10 @@ class AbstractShaderManager {
 		
 	}
 	
+	public function setActiveTexture ( idx:Int ):Void {
+		
+		
+		
+	}
 	
 }
