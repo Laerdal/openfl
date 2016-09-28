@@ -569,6 +569,27 @@ class TextEngine {
 		}
 		
 		maxScrollV = numLines - bottomScrollV + 1;
+
+
+		if (autoSize != NONE) {
+			
+			switch (autoSize) {
+				
+				case LEFT, RIGHT, CENTER:
+					
+					if (!wordWrap && width < (textWidth + 4)) {
+						//trace('width: ${width} <  textWidth: ${textWidth}');
+						width = textWidth + 4;
+						
+					}
+					
+					height = textHeight + 4;
+				
+				default:
+					
+				
+			}
+		}
 		
 	}
 	
