@@ -821,8 +821,7 @@ class CanvasGraphics {
 		
 		graphics.__update ();
 		
-		var mask = graphics.__owner.mask;
-		if (graphics.__dirty || (mask != null && mask.__graphics.__dirty) ) {
+		if (graphics.__dirty) {
 			
 			hitTesting = false;
 			
