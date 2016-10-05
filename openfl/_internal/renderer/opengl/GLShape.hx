@@ -73,7 +73,7 @@ class GLShape {
 				
 				renderSession.blendModeManager.setBlendMode (shape.blendMode);
 				renderSession.shaderManager.setShader (shader);
-				//renderSession.maskManager.pushObject (shape);
+				renderSession.maskManager.pushObject (shape);
 				
 				var renderer:GLRenderer = cast renderSession.renderer;
 				
@@ -136,7 +136,7 @@ class GLShape {
 				
 				gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
 				
-				//renderSession.maskManager.popObject (shape);
+				renderSession.maskManager.popObject (shape);
 			}	
 		}
 				
