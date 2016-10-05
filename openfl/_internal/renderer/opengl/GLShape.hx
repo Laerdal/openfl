@@ -53,7 +53,9 @@ class GLShape {
 			CairoGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			#end
 		}
-
+		
+		var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
+		
 		if (graphics != null) {
 			
 			#if (js && html5)
@@ -69,7 +71,7 @@ class GLShape {
 				
 				var shader;
 				
-				if (shape.mask != null || shape.parent.__renderedMask != null) {
+				if (isMasked) {
 
 					shader = renderSession.shaderManager.defaultMaskingShader;
 					
@@ -100,7 +102,7 @@ class GLShape {
 					
 				}
 							
-				if (shape.mask != null || shape.parent.__renderedMask != null) {
+				if (isMasked) {
 					
 					var maskBitmap:BitmapData = null;
 					if (shape.parent.__renderedMask != null) {
