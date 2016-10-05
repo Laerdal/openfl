@@ -86,9 +86,8 @@ class GLShape {
 				}
 				
 				renderSession.blendModeManager.setBlendMode (shape.blendMode);
-				//renderSession.maskManager.pushObject (shape);
-				
 				renderSession.shaderManager.setShader (shader);
+				renderSession.maskManager.pushObject (shape);
 
 				if (renderSession.allowSmoothing) {
 					
@@ -145,7 +144,7 @@ class GLShape {
 				gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
 				
 				renderSession.filterManager.popObject (shape);
-				//renderSession.maskManager.popObject (shape);
+				renderSession.maskManager.popObject (shape);
 				
 			}
 			
