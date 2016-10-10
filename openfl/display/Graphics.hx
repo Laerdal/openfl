@@ -64,6 +64,7 @@ import js.html.CanvasRenderingContext2D;
 	#end
 	
 	private var __bitmap:BitmapData;
+	private var __maskBitmap:BitmapData;
 	
 	
 	private function new (owner:DisplayObject) {
