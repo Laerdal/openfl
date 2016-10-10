@@ -35,7 +35,7 @@ class GLShape {
 		var maskGraphics:Graphics = null;
 		var gl = renderSession.gl;
 
-		// Render mask
+		//// Render mask
 		if (shape.mask != null) {
 			mask = shape.__mask;
 			maskGraphics = shape.__mask.__graphics;
@@ -96,9 +96,8 @@ class GLShape {
 							
 				if (isMasked) {
 					
-					var maskBitmap:BitmapData = null;
 					if (shape.parent.__renderedMask != null) {
-						maskBitmap = shape.__renderedMask = shape.parent.__renderedMask;
+						graphics.__maskBitmap = shape.__renderedMask = shape.parent.__renderedMask;
 					} else {			
 						var wt = shape.__worldTransform;
 						var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
@@ -108,20 +107,22 @@ class GLShape {
 						var tx = -sx * (bs.x - bm.x);
 						var ty = -sy * (bs.y - bm.y);
 						
-						maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
+						if (graphics.__maskBitmap == null)
+							graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
 						var m = new Matrix();
 						m.translate( tx, ty );
 						m.rotate( shape.__mask.rotation * Math.PI / 180 );
-						maskBitmap.draw( maskGraphics.__bitmap, m );
+						graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
+						graphics.__maskBitmap.draw( maskGraphics.__bitmap, m );
 
-						shape.__renderedMask = maskBitmap;
+						shape.__renderedMask = graphics.__maskBitmap;
 					}
 					
 					renderSession.shaderManager.setActiveTexture( 1 );
 					
 					//trace("scale:" + sx + "/" + sy + " t:=" + tx + "/" + ty + " r:" + shape.__mask.rotation);
 					
-					gl.bindTexture (gl.TEXTURE_2D, maskBitmap.getTexture (gl));
+					gl.bindTexture (gl.TEXTURE_2D, graphics.__maskBitmap.getTexture (gl));
 					
 					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
