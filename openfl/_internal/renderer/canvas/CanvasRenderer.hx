@@ -101,14 +101,7 @@ class CanvasRenderer extends AbstractRenderer {
 			if (graphics.__bitmap!=null)
 				bmd.draw( graphics.__bitmap, shape.__worldTransform );
 		}
-		
-		if (GLShape.DEBUG &&  ctr2 < 20) {
-			var b = new Bitmap(bmd.clone());
-			b.x = 50;
-			b.y = ctr++ * 250;
-			Lib.current.stage.addChild(b);
-		}
-		ctr2++;
+
 	}	
 
 }

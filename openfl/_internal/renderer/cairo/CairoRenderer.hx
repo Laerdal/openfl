@@ -99,13 +99,8 @@ class CairoRenderer extends AbstractRenderer {
 				bmd.draw( graphics.__bitmap );
 		}
 		
-		if (GLShape.DEBUG) {
-			var b = new Bitmap(bmd.clone());
-			b.x = 50;
-			b.y = ctr++ * 50;
-			Lib.current.stage.addChild(b);
-		}
 	}	
+
 }
 
 
