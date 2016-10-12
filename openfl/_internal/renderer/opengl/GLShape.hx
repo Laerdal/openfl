@@ -25,8 +25,8 @@ import openfl.geom.Matrix;
 
 class GLShape {
 	
-	private static var ctr:Int = 0;
-	public static var DEBUG:Bool = false;
+	private static var maskMatrix:Matrix = new Matrix();
+	
 	public static inline function render (shape:DisplayObject, renderSession:RenderSession):Void {
 		
 		if (!shape.__renderable || shape.__worldAlpha <= 0 || shape.__renderedAsCachedBitmap) return;
@@ -69,16 +69,18 @@ class GLShape {
 				if (isMasked) {
 
 					shader = renderSession.shaderManager.defaultMaskingShader;
+					shader.data.uImage1.input = graphics.__bitmap;
+					shader.data.uImage1.smoothing = renderSession.allowSmoothing;
 					
 				} else {
 					
 					shader = renderSession.filterManager.pushObject (shape);
-					
-					shader.data.uImage0.input = graphics.__bitmap;
-					shader.data.uImage0.smoothing = renderSession.allowSmoothing;
-					shader.data.uMatrix.value = renderer.getMatrix (graphics.__worldTransform);
-					
+										
 				}
+				
+				shader.data.uImage0.input = graphics.__bitmap;
+				shader.data.uImage0.smoothing = renderSession.allowSmoothing;
+				shader.data.uMatrix.value = renderer.getMatrix (graphics.__worldTransform);
 				
 				renderSession.blendModeManager.setBlendMode (shape.blendMode);
 				renderSession.shaderManager.setShader (shader);
@@ -99,30 +101,27 @@ class GLShape {
 				if (isMasked) {
 					
 					if (shape.parent.__renderedMask != null) {
+					
 						graphics.__maskBitmap = shape.__renderedMask = shape.parent.__renderedMask;
+					
 					} else {			
-						var wt = shape.__worldTransform;
-						var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
-						var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
-						var bs = shape.getBounds( shape );
-						var bm = shape.mask.getBounds( shape );
-						var tx = -sx * (bs.x - bm.x);
-						var ty = -sy * (bs.y - bm.y);
 						
 						if (graphics.__maskBitmap == null)
 							graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
-						var m = new Matrix();
-						m.translate( tx, ty );
-						m.rotate( shape.__mask.rotation * Math.PI / 180 );
+							
+						maskMatrix.identity();
+						maskMatrix.translate( maskGraphics.__bounds.x, maskGraphics.__bounds.y);
+						maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
+						maskMatrix.translate( -graphics.__bounds.x, -graphics.__bounds.y);
+
 						graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
-						graphics.__maskBitmap.draw( maskGraphics.__bitmap, m );
+						graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
 
 						shape.__renderedMask = graphics.__maskBitmap;
+						
 					}
 					
 					renderSession.shaderManager.setActiveTexture( 1 );
-					
-					//trace("scale:" + sx + "/" + sy + " t:=" + tx + "/" + ty + " r:" + shape.__mask.rotation);
 					
 					gl.bindTexture (gl.TEXTURE_2D, graphics.__maskBitmap.getTexture (gl));
 					
