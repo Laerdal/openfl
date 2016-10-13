@@ -109,11 +109,21 @@ class GLShape {
 						if (graphics.__maskBitmap == null)
 							graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
 							
+						var wt = shape.__worldTransform;
+                        var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
+                        var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
+                        var bm = shape.mask.getBounds( shape );
+						var tx = sx * (bm.x - maskGraphics.__bounds.x - graphics.__bounds.x);
+                        var ty = sy * (bm.y - maskGraphics.__bounds.y - graphics.__bounds.y);
+                        
 						maskMatrix.identity();
-						maskMatrix.translate( maskGraphics.__bounds.x, maskGraphics.__bounds.y);
+						maskMatrix.translate( maskGraphics.__bounds.x * sx, maskGraphics.__bounds.y * sy );
 						maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
-						maskMatrix.translate( -graphics.__bounds.x, -graphics.__bounds.y);
-
+						maskMatrix.translate( tx, ty );
+ 						
+                        if (graphics.__maskBitmap == null)
+                            graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
+                        
 						graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
 						graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
 
