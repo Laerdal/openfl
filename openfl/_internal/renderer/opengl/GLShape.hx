@@ -31,7 +31,7 @@ import openfl.geom.Matrix;
 class GLShape {
 	
 	private static var maskMatrix:Matrix = new Matrix();
-	
+
 	public static inline function render (shape:DisplayObject, renderSession:RenderSession):Void {
 		
 		if (!shape.__renderable || shape.__worldAlpha <= 0 || shape.__renderedAsCachedBitmap) return;
@@ -46,7 +46,7 @@ class GLShape {
 		if (shape.mask != null) {
 			mask = shape.__mask;
 			maskGraphics = shape.__mask.__graphics;
-			
+
 			#if (js && html5)
 			CanvasGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			#elseif lime_cairo
@@ -55,9 +55,9 @@ class GLShape {
 		}
 		
 		var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
-		
+
 		if (graphics != null) {
-			
+
 			#if (js && html5)
 			CanvasGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			#elseif lime_cairo
@@ -104,16 +104,13 @@ class GLShape {
 				}
 							
 				if (isMasked) {
-					
+
 					if (shape.parent.__renderedMask != null) {
-					
+	
 						graphics.__maskBitmap = shape.__renderedMask = shape.parent.__renderedMask;
 					
 					} else {			
-						
-						if (graphics.__maskBitmap == null)
-							graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
-							
+													
 						var wt = shape.__worldTransform;
                         var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
                         var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
@@ -126,9 +123,9 @@ class GLShape {
 						maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
 						maskMatrix.translate( tx, ty );
  						
-                        if (graphics.__maskBitmap == null)
-                            graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
-                        
+						if (graphics.__maskBitmap == null || graphics.__maskBitmap.width != graphics.__bitmap.width || graphics.__maskBitmap.height != graphics.__bitmap.height)
+							graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
+
 						graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
 						graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
 
