@@ -1255,7 +1255,7 @@ class TextEngine {
 	
 	private function update ():Void {
 		
-		if (text == null || (!multiline && StringTools.trim (text) == "") || textFormatRanges.length == 0) {
+		if (text == null || (!multiline && text == "")|| textFormatRanges.length == 0) {
 			
 			lineAscents.length = 0;
 			lineBreaks.length = 0;
