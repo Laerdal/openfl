@@ -1158,7 +1158,7 @@ class TextEngine {
 	
 	private function update ():Void {
 		
-		if (text == null || StringTools.trim (text) == "" || textFormatRanges.length == 0) {
+		if (text == null || text == "" || textFormatRanges.length == 0) {
 			
 			lineAscents.splice (0, lineAscents.length);
 			lineBreaks.splice (0, lineBreaks.length);
