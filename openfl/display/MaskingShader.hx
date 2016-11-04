@@ -44,7 +44,7 @@ class MaskingShader extends Shader
 						
 					} else {
 						
-						gl_FragColor = vec4 (color.rgb / color.a, color.a * vAlpha * mask.a);
+						gl_FragColor = color * vAlpha * mask.a;
 						
 					}
 					
