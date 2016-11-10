@@ -395,7 +395,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		for (child in __children) {
 			
-			if (child.__scaleX == 0 || child.__scaleY == 0) continue;
+			if (child.visible == false || child.__scaleX == 0 || child.__scaleY == 0) continue;
 			child.__getBounds (rect, child.__worldTransform);
 			
 		}
