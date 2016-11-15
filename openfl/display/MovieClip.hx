@@ -22,6 +22,7 @@ import openfl.text.TextField;
 class MovieClip extends Sprite #if openfl_dynamic implements Dynamic<DisplayObject> #end {
 	
 	
+	private static var __noColorTranform = new openfl.geom.ColorTransform();
 	private static var __initSWF:SWFLite;
 	private static var __initSymbol:SpriteSymbol;
 	
@@ -345,11 +346,7 @@ class MovieClip extends Sprite #if openfl_dynamic implements Dynamic<DisplayObje
 	
 	private function __placeObject (displayObject:DisplayObject, frameObject:FrameObject):Void {
 		
-		if (frameObject.name != null) {
-			
-			displayObject.name = frameObject.name;
-			
-		}
+		displayObject.name = (frameObject.name != null)? frameObject.name : "";
 		
 		if (frameObject.matrix != null) {
 			
@@ -357,15 +354,11 @@ class MovieClip extends Sprite #if openfl_dynamic implements Dynamic<DisplayObje
 			
 		}
 		
-		if (frameObject.colorTransform != null) {
-			
-			displayObject.transform.colorTransform = frameObject.colorTransform;
-			
-		}
+		displayObject.transform.colorTransform = (frameObject.colorTransform != null) ? frameObject.colorTransform : __noColorTranform;
+		
+		var filters:Array<BitmapFilter> = [];
 		
 		if (frameObject.filters != null) {
-			
-			var filters:Array<BitmapFilter> = [];
 			
 			for (filter in frameObject.filters) {
 				
@@ -391,9 +384,9 @@ class MovieClip extends Sprite #if openfl_dynamic implements Dynamic<DisplayObje
 				
 			}
 			
-			displayObject.filters = filters;
-			
 		}
+		
+		displayObject.filters = filters;
 		
 		displayObject.visible = frameObject.visible;
 		
