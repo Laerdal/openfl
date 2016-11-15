@@ -700,7 +700,6 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 					}
 					
 					__objectDepths.splice (i, 1);
-					__objects.remove (timelineObject.id);
 					
 				} else {
 					
@@ -739,7 +738,6 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 						}
 						
 						__objectDepths.remove (__objects.get (0));
-						__objects.remove (0);
 						timelineObject = null;
 						displayObject = null;
 						__zeroSymbol = frameObject.symbol;
@@ -755,7 +753,6 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 							timelineObject = new TimelineObject (frameObject.id, frameObject.depth, displayObject);
 							
 							__objectDepths.push (timelineObject);
-							__objectDepths.sort (__sortTimelineDepth);
 							
 							depthChange = true;
 							
@@ -767,6 +764,14 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 						
 						timelineObject = __objects.get (frameObject.id);
 						displayObject = timelineObject.displayObject;
+
+						if (timelineObject.displayObject.parent == null) {
+							
+							__objectDepths.push(timelineObject);
+							
+							depthChange = true;
+							
+						}
 						
 					}
 					
@@ -815,7 +820,6 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 						}
 						
 						__objectDepths.remove (timelineObject);
-						__objects.remove (timelineObject.id);
 						
 						depthChange = true;
 						
@@ -828,6 +832,8 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 		}
 		
 		if (depthChange) {
+			
+			__objectDepths.sort (__sortTimelineDepth);
 			
 			var i = __objectDepths.length - 1;
 			
