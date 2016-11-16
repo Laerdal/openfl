@@ -72,6 +72,7 @@ import js.Browser;
 @:access(openfl.ui.GameInput)
 @:access(openfl.ui.Keyboard)
 @:access(openfl.ui.Mouse)
+@:access(openfl.ui.Window)
 
 
 class Stage extends DisplayObjectContainer implements IModule {
@@ -1751,6 +1752,24 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (window != null) {
 			
+			#if (js && html5)
+			var prefix = untyped __js__ ("(function () {
+			var styles = window.getComputedStyle(document.documentElement, ''),
+				pre = (Array.prototype.slice
+				.call(styles)
+				.join('') 
+				.match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
+				)[1],
+				dom = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))[1];
+			return {
+				dom: dom,
+				lowercase: pre,
+				css: '-' + pre + '-',
+				js: pre[0].toUpperCase() + pre.substr(1)
+			};
+			})")();
+			#end
+
 			switch (value) {
 				
 				case NORMAL:
@@ -1759,6 +1778,15 @@ class Stage extends DisplayObjectContainer implements IModule {
 						
 						//window.minimized = false;
 						window.fullscreen = false;
+
+						#if (js && html5)
+						switch (prefix.lowercase) {
+							case "webkit": untyped js.Browser.document.webkitExitFullscreen();
+							case "moz": untyped js.Browser.document.mozCancelFullScreen();
+							case "ms": untyped js.Browser.document.msExitFullscreen();
+							default: untyped js.Browser.document.exitFullscreen();
+						}
+						#end
 						
 					}
 				
@@ -1768,6 +1796,15 @@ class Stage extends DisplayObjectContainer implements IModule {
 						
 						//window.minimized = false;
 						window.fullscreen = true;
+
+						#if (js && html5)
+						switch (prefix.lowercase) {
+							case "webkit": untyped window.config.element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+							case "moz": untyped window.config.element.mozRequestFullScreen();
+							case "ms": untyped window.config.element.msRequestFullscreen();
+							default: untyped window.config.element.requestFullscreen();
+						}
+						#end
 						
 					}
 				
