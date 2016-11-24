@@ -9,10 +9,10 @@ import openfl.display.DisplayObject;
 import openfl.display.Shader;
 import openfl.filters.BitmapFilter;
 import openfl.filters.GlowFilter;
+import openfl.geom.Rectangle;
 import openfl.geom.Matrix;
 import openfl.text.TextField;
 import openfl.geom.Point;
-import openfl.geom.Rectangle;
 import openfl.Vector;
 
 #if !openfl_debug
