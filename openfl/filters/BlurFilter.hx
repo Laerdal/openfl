@@ -36,6 +36,12 @@ class BlurFilter extends BitmapFilter {
 		
 	}
 	
+
+	public function toString ():String {
+		
+		return "BlurFilter: [ blurX:" + blurX + ", blurY:" + blurY + ", quality:" + quality + " ]";
+		
+	}
 	
 	
 	
@@ -101,7 +107,7 @@ class BlurFilter extends BitmapFilter {
 		var source = sourceBitmapData.clone().image.data;
 		var target = destBitmapData.image.data;
 
-		FilterUtils.GaussianBlur( source, target, sourceBitmapData.width, sourceBitmapData.height, blurX, blurY );
+		FilterUtils.GaussianBlur( source, target, sourceBitmapData.width, sourceBitmapData.height, blurX, blurY, quality );
 
 		super.__renderFilter( sourceBitmapData, destBitmapData );
 	}

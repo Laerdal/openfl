@@ -44,6 +44,13 @@ class GlowFilter extends BlurFilter {
 	}
 	
 	
+	public override function toString ():String {
+		
+		return "GlowFilter: [ color:" + color + ", alpha:" + alpha + ", blurX:" + blurX + ", blurY:" + blurY + ", strength:" + strength + ", quality:" + quality + ", inner:" + inner + ", knockout:" + knockout + " ]";
+		
+	}
+	
+	
 	
 	
 	// Get & Set Methods
@@ -154,7 +161,7 @@ class GlowFilter extends BlurFilter {
 			i += 4;
 		}
 
-		FilterUtils.GaussianBlur( source, target, sourceBitmapData.width, sourceBitmapData.height, blurX, blurY );
+		FilterUtils.GaussianBlur( source, target, sourceBitmapData.width, sourceBitmapData.height, blurX, blurY, quality, strength );
 
 		tmpSrc = null;
 

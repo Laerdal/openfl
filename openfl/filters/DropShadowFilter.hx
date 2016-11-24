@@ -37,6 +37,11 @@ import openfl.geom.Rectangle;
 	}
 	
 	
+	public override function toString ():String {
+		
+		return "DropShadowFilter: [ distance:" + distance + ", angle:" + angle + ", color:" + color + ", alpha:" + alpha + ", blurX:" + blurX + ", blurY:" + blurY + ", strength:" + strength + ", quality:" + quality + ", inner:" + inner + ", knockout:" + knockout + ", hideObject:" + hideObject + " ]";
+		
+	}
 	
 	
 	// Get & Set Methods
@@ -129,7 +134,7 @@ trace("setAngle:val="+value+" off:"+offsetX+"/"+offsetY+" d:"+distance+" a:"+ang
 			i += 4;
 		}
 
-		FilterUtils.GaussianBlur( source, target, sourceBitmapData.width, sourceBitmapData.height, blurX, blurY, offsetX, offsetY );
+		FilterUtils.GaussianBlur( source, target, sourceBitmapData.width, sourceBitmapData.height, blurX, blurY, quality, strength, offsetX, offsetY );
 
 		tmpSrc = null;
 
