@@ -53,9 +53,9 @@ import openfl.geom.Rectangle;
 trace("setDistance");
 
 		if (value != distance) {
-			offsetX = Std.int( value * Math.sin( angle * Math.PI / 180 ) );
-			offsetY = Std.int( value * Math.cos( angle * Math.PI / 180 ) );
-trace("setDistance:val="+value+" off:"+offsetX+"/"+offsetY+" d:"+distance+" a:"+angle);
+			__filterOffset.x = Std.int( value * Math.cos( angle * Math.PI / 180 ) );
+			__filterOffset.y = Std.int( value * Math.sin( angle * Math.PI / 180 ) );
+trace("setDistance:val="+value+" off:"+__filterOffset.x+"/"+__filterOffset.y+" d:"+distance+" a:"+angle);
 			__filterDirty = true;
 		}
 		
@@ -68,9 +68,9 @@ trace("setDistance:val="+value+" off:"+offsetX+"/"+offsetY+" d:"+distance+" a:"+
 trace("setAngle");
 
 		if (value != angle) {
-			offsetX = Std.int( distance * Math.sin( value * Math.PI / 180 ) );
-			offsetY = Std.int( distance * Math.cos( value * Math.PI / 180 ) );
-trace("setAngle:val="+value+" off:"+offsetX+"/"+offsetY+" d:"+distance+" a:"+angle);
+			__filterOffset.x = Std.int( distance * Math.cos( value * Math.PI / 180 ) );
+			__filterOffset.y = Std.int( distance * Math.sin( value * Math.PI / 180 ) );
+trace("setAngle:val="+value+" off:"+__filterOffset.x+"/"+__filterOffset.y+" d:"+distance+" a:"+angle);
 
 			__filterDirty = true;
 		}
@@ -98,16 +98,6 @@ trace("setAngle:val="+value+" off:"+offsetX+"/"+offsetY+" d:"+distance+" a:"+ang
 		
 		return __dropShadowShader;
 		
-	}
-
-
-	private override function __getFilterBounds( sourceBitmapData:BitmapData ) : Rectangle {
-
-		var offX = blurX + offsetX;
-		var offY = blurY + offsetY;
-		
-		return new Rectangle( blurX, blurY, sourceBitmapData.width + offX + blurX, sourceBitmapData.height + offY + blurY );
-
 	}
 
 
