@@ -478,9 +478,9 @@ class MovieClip extends Sprite #if openfl_dynamic implements Dynamic<DisplayObje
 					
 					if (!__objects.exists (frameObject.id)) {
 						
-						if (__swf.symbols.exists (frameObject.symbol)) {
+						var symbol = __swf.symbols.get (frameObject.symbol);
+						if (symbol != null) {
 							
-							symbol = __swf.symbols.get (frameObject.symbol);
 							displayObject = symbol.__createObject (__swf);
 							
 						}
