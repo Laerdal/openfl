@@ -351,6 +351,7 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 		symbol.commands = null;
 		symbol.rendered = new Shape ();
 		symbol.rendered.graphics.copyFrom (shape.graphics);
+		symbol.rendered.filters = filters;
 		
 		return shape;
 		
@@ -656,7 +657,7 @@ class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 			}
 			
 		}
-		
+		if (filters!=null && filters.length>0) trace("ADDING FILTERS:name="+displayObject.name+" type="+Type.getClassName( Type.getClass( displayObject ))+" filters:"+filters);
 		displayObject.filters = filters;
 		
 		displayObject.visible = frameObject.visible;

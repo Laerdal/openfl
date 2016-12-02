@@ -27,6 +27,9 @@ class BlurFilter extends BitmapFilter {
 		this.blurY = blurY;
 		this.quality = quality;
 
+		if (Std.is(this, BlurFilter))
+			trace("Filter constructor:"+this+" stack:"+haxe.CallStack.callStack());
+		
 	}
 	
 	

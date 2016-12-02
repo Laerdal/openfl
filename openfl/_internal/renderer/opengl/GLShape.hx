@@ -36,47 +36,86 @@ class GLShape {
 		var mask:DisplayObject;
 		var maskGraphics:Graphics = null;
 		var gl = renderSession.gl;
+        var stdRender = true;
 
-		//// Render mask
-		if (shape.mask != null) {
-			mask = shape.__mask;
-			maskGraphics = shape.__mask.__graphics;
 
-			#if (js && html5)
-			CanvasGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
-			#elseif lime_cairo
-			CairoGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
-			#end
-		}
-		
-		var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
+        // Render cache as bitmap
+        if ( shape.cacheAsBitmap ) {
+            
+            
+			renderSession.updateCachedBitmap( shape );
 
-		if (graphics != null) {
+			renderSession.maskManager.pushObject (shape);
+			renderSession.filterManager.pushObject (shape);
 
-			#if (js && html5)
-			CanvasGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
-			#elseif lime_cairo
-			CairoGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
-			#end
-		
-			if (graphics.__bitmap != null && graphics.__visible) {
-				
-				var renderer:GLRenderer = cast renderSession.renderer;
-				var gl = renderSession.gl;
-				
-				var shader;
-				var targetBitmap = graphics.__bitmap;
-				var transform = graphics.__worldTransform;
-				var stdRender = true;
+            if (renderSession.filterManager.useCPUFilters && shape.filters != null && shape.filters.length > 0) {
+                    
+                renderFilterBitmap( shape, renderSession );
+            
+                stdRender = shape.filters[0].__preserveOriginal;
+            } 
 
-				if (renderSession.filterManager.useCPUFilters && shape.filters != null && shape.filters.length > 0) {
-						
-					renderFilterBitmap( shape, renderSession );
-				
-					stdRender = shape.filters[0].__preserveOriginal;
-				} 
+			if (stdRender)
+				renderCacheAsBitmap( shape, renderSession );
+ 		
+			renderSession.filterManager.popObject (shape);
+			renderSession.maskManager.popObject (shape);
 
-				if (stdRender) {
+        } else {
+
+			//// Render mask
+			if (shape.mask != null) {
+				mask = shape.__mask;
+				maskGraphics = shape.__mask.__graphics;
+
+				#if (js && html5)
+				CanvasGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				#elseif lime_cairo
+				CairoGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				#end
+
+				com.geepers.DebugUtils.debugBitmap( maskGraphics.__bitmap, 1, 1 );
+			}
+			
+			var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
+
+			if (graphics != null && stdRender) {
+
+				#if (js && html5)
+				CanvasGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				#elseif lime_cairo
+				CairoGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				#end
+			
+				if (graphics.__bitmap != null && graphics.__visible) {
+					
+					var renderer:GLRenderer = cast renderSession.renderer;
+					var gl = renderSession.gl;
+					
+					var shader;
+					var targetBitmap = graphics.__bitmap;
+					var transform = graphics.__worldTransform;
+
+					// if (shape.__name.indexOf("Star")>-1 || shape.__name.indexOf("CAB")>-1 && !Test1.DONE) {
+					// 	trace("GLShape:"+shape.__name+" transform:"+transform);
+					// 	var wt = transform;
+					// 	var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.b * wt.b ) );
+					// 	var sy = Math.sqrt( ( wt.c * wt.c ) + ( wt.d * wt.d ) );
+					// 	var dtX = wt.deltaTransformPoint( new Point(0, 1) );
+					// 	var dtY = wt.deltaTransformPoint( new Point(1, 0) );
+					// 	var skx = (180 / Math.PI) * Math.atan2(dtX.y, dtX.x) - 90;
+					// 	var sky = (180 / Math.PI) * Math.atan2(dtY.y, dtY.x);
+					// 	var sign = Math.atan(-wt.c / wt.a);
+					// 	var rot = 180 / Math.PI * ( Math.acos( wt.a / sx ));
+					// 	if ((rot>90 && sign>0) || (rot<90 && sign<0))
+					// 		rot = 360 - rot; 
+
+					// 	trace(" - T:"+wt.tx+"/"+wt.ty);
+					// 	trace(" - S:"+sx+"/"+sy);
+					// 	trace(" - SK:"+skx+"/"+sky);
+					// 	trace(" - R:"+rot);
+					// }
+
 					if (isMasked) {
 
 						shader = renderSession.shaderManager.defaultMaskingShader;
@@ -89,6 +128,12 @@ class GLShape {
 											
 					}
 					
+					if (targetBitmap.width==512) {
+						trace("RENDERING SQUIGGLE");
+						var aa=1;
+						aa++;
+					}
+
 					shader.data.uImage0.input = targetBitmap;
 					shader.data.uImage0.smoothing = renderSession.allowSmoothing;
 					shader.data.uMatrix.value = renderer.getMatrix (transform);
@@ -145,9 +190,9 @@ class GLShape {
 						
 						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-						renderSession.shaderManager.setActiveTexture( 0 );
 					}
+					
+					renderSession.shaderManager.setActiveTexture( 0 );
 					
 					gl.bindBuffer (gl.ARRAY_BUFFER, targetBitmap.getBuffer (gl, shape.__worldAlpha));
 					gl.vertexAttribPointer (shader.data.aPosition.index, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -155,34 +200,65 @@ class GLShape {
 					gl.vertexAttribPointer (shader.data.aAlpha.index, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
 					
 					gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
+					
+					renderSession.filterManager.popObject (shape);
+					renderSession.maskManager.popObject (shape);
+					
 				}
-				
-				renderSession.filterManager.popObject (shape);
-				renderSession.maskManager.popObject (shape);
-				
 			}
 			
 		}
 		
 	}
 
+	static var ctr = 0;
 
 	private static inline function renderFilterBitmap (shape:DisplayObject, renderSession:RenderSession):Void {
+
+		var shapeTransform = shape.__graphics == null ? shape.__worldTransform.clone() : shape.__graphics.__worldTransform.clone();
+		var targetBitmap = renderSession.filterManager.renderFilters( shape, shape.__cachedBitmap );
+		var transform = new Matrix();
+		var pt = new Point ( shapeTransform.tx, shapeTransform.ty );
+		pt = transform.deltaTransformPoint( pt );
+		transform.translate( pt.x, pt.y );
+		transform.translate( -shape.__filterBounds.x + shape.__filterOffset.x , -shape.__filterBounds.y + shape.__filterOffset.y );
+		transform.translate( -shape.__cacheAsBitmapMatrix.tx, -shape.__cacheAsBitmapMatrix.ty );
+	
+		renderBitmapTexture( targetBitmap, transform, shape, renderSession );
+	}
+
+	private static inline function renderCacheAsBitmap (shape:DisplayObject, renderSession:RenderSession):Void {
+
+		var shapeTransform = shape.__graphics == null ? shape.__worldTransform.clone() : shape.__graphics.__worldTransform.clone();
+		var targetBitmap = shape.__cachedBitmap;
+		var transform = new Matrix();
+		var pt = new Point ( shapeTransform.tx, shapeTransform.ty );
+		pt = transform.deltaTransformPoint( pt );
+		transform.translate( pt.x, pt.y );
+		transform.translate( -shape.__cacheAsBitmapMatrix.tx, -shape.__cacheAsBitmapMatrix.ty );
+
+		if (ctr++ < 3) {
+			trace("Render:"+shape.name+" filters="+shape.filters);        
+			trace(" - ShapeTransform:"+shape.__transform);
+			trace(" - ShapeWTransform:"+shape.__worldTransform);
+			trace(" - ShapeCABTransform:"+shape.__cacheAsBitmapMatrix);
+			trace(" - ParentWTransfrm:"+shape.parent.__worldTransform);
+		}
+
+		renderBitmapTexture( targetBitmap, transform, shape, renderSession );
+	}
+
+	private static inline function renderBitmapTexture (targetBitmap:BitmapData, transform:Matrix, shape:DisplayObject, renderSession:RenderSession):Void {
 						
-		var graphics = shape.__graphics;
 		var gl = renderSession.gl;
 		var renderer:GLRenderer = cast renderSession.renderer;
 		var shader = renderSession.shaderManager.defaultShader;
 
-		// Render filter bitmap and draw it
-		renderSession.updateCachedBitmap( shape );
-		
-		var targetBitmap = renderSession.filterManager.renderFilters( shape, shape.__cachedBitmap );
-
-		var transform = new Matrix();
-		transform.translate( graphics.__worldTransform.tx, graphics.__worldTransform.ty );
-		transform.translate( -shape.__filterBounds.x + shape.__filterOffset.x , -shape.__filterBounds.y + shape.__filterOffset.y );
-		transform.translate( -shape.__cacheAsBitmapMatrix.tx, -shape.__cacheAsBitmapMatrix.ty );
+					if (targetBitmap.width==512) {
+						trace("RENDERING SQUIGGLE");
+						var aa=1;
+						aa++;
+					}
 
 		shader.data.uImage0.input = targetBitmap;
 		shader.data.uImage0.smoothing = renderSession.allowSmoothing;
@@ -211,9 +287,6 @@ class GLShape {
 		gl.vertexAttribPointer (shader.data.aAlpha.index, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
 		
 		gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
-		
-		renderSession.filterManager.popObject (shape);
-		renderSession.maskManager.popObject (shape);
 						
 	}
 

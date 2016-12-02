@@ -27,6 +27,8 @@ import openfl.geom.Rectangle;
 		this.distance = distance;
 		this.angle = angle;
 		
+		if (Std.is(this, DropShadowFilter))
+			trace("Filter constructor:"+this+" stack:"+haxe.CallStack.callStack());
 	}
 	
 	
@@ -50,12 +52,11 @@ import openfl.geom.Rectangle;
 	
 	
 	private function set_distance (value:Float):Float {
-trace("setDistance");
 
 		if (value != distance) {
 			__filterOffset.x = Std.int( value * Math.cos( angle * Math.PI / 180 ) );
 			__filterOffset.y = Std.int( value * Math.sin( angle * Math.PI / 180 ) );
-trace("setDistance:val="+value+" off:"+__filterOffset.x+"/"+__filterOffset.y+" d:"+distance+" a:"+angle);
+
 			__filterDirty = true;
 		}
 		
@@ -65,12 +66,10 @@ trace("setDistance:val="+value+" off:"+__filterOffset.x+"/"+__filterOffset.y+" d
 	
 	
 	private function set_angle (value:Float):Float {
-trace("setAngle");
 
 		if (value != angle) {
 			__filterOffset.x = Std.int( distance * Math.cos( value * Math.PI / 180 ) );
 			__filterOffset.y = Std.int( distance * Math.sin( value * Math.PI / 180 ) );
-trace("setAngle:val="+value+" off:"+__filterOffset.x+"/"+__filterOffset.y+" d:"+distance+" a:"+angle);
 
 			__filterDirty = true;
 		}

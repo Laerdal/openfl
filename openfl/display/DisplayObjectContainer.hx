@@ -713,26 +713,30 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		renderSession.maskManager.pushObject (this);
 		
-		for (child in __children) {
+		if (!cacheAsBitmap) {
 			
-			child.__renderGL (renderSession);
-			
-		}
-		
-		for (orphan in __removedChildren) {
-			
-			if (orphan.stage == null) {
+			for (child in __children) {
 				
-				orphan.__cleanup ();
+				child.__renderGL (renderSession);
 				
 			}
 			
-		}
+			for (orphan in __removedChildren) {
+				
+				if (orphan.stage == null) {
+					
+					orphan.__cleanup ();
+					
+				}
+				
+			}
+			
+			if (__removedChildren.length > 0) {
+				
+				__removedChildren.splice (0, __removedChildren.length);
+				
+			}
 		
-		if (__removedChildren.length > 0) {
-			
-			__removedChildren.splice (0, __removedChildren.length);
-			
 		}
 		
 		renderSession.maskManager.popObject (this);

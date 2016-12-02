@@ -38,7 +38,7 @@ class GLDisplayObject {
 			
 		}
 		
-		if (displayObject.__graphics != null || displayObject.mask != null) {
+		if (displayObject.__graphics != null || displayObject.mask != null || displayObject.cacheAsBitmap ) {
 			
 			GLShape.render (displayObject, renderSession);
 			
