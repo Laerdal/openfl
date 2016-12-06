@@ -55,7 +55,7 @@ class GLFilterManager extends AbstractFilterManager {
 				var displacedSource = new BitmapData(Std.int(bounds.width), Std.int(bounds.height), src.transparent, 0x0);
 				displacedSource.copyPixels( src, src.rect, new Point( bounds.x, bounds.y ) );
 				object.__filterBitmap = new BitmapData(Std.int(bounds.width), Std.int(bounds.height), src.transparent, 0x0);
-				
+
 				// USE THE FOLLOWING FOR DEBUGGING AND TIMING
 				// trace("Filter:"+object.name);
 				// haxe.Timer.measure(function() {
@@ -68,8 +68,6 @@ class GLFilterManager extends AbstractFilterManager {
 				for (filter in object.__filters) {
 					filter.__renderFilter( displacedSource, object.__filterBitmap );
 				}
-
-				// Test1.ADD( object.__filterBitmap );
 				
 				// var overlay = new BitmapData(Std.int(bounds.width), Std.int(bounds.height), src.transparent, 0x20008800);
 				// object.__filterBitmap.draw( overlay );

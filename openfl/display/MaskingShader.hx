@@ -23,19 +23,19 @@ class MaskingShader extends Shader
 					vec4 mask = texture2D (uImage1, vTexCoord);
 					
 					//TODO: Uncommnent this block for debugging shader
-					//if (mask.a > 0.0) {
-					//
-					//	gl_FragColor = vec4 ((mask.rgb * 0.5) + (color.rgb * 0.5), 1.0);
-					//
-					//} else if (color.a == 0.0) {
-					//
-					//	gl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
-					//
-					//} else {
-					//
-					//	gl_FragColor = vec4 (color.rgb / color.a, color.a * vAlpha);
-					//
-					//}
+					// if (mask.a > 0.0) {
+					
+					// 	gl_FragColor = vec4 ((mask.rgb * 0.5) + (color.rgb * 0.5), 1.0);
+					
+					// } else if (color.a == 0.0) {
+					
+					// 	gl_FragColor = vec4 (color.rgb, 0.2);
+					
+					// } else {
+					
+					// 	gl_FragColor = color * vAlpha * mask.a;
+					
+					// }
 
 					//TODO: Comment out this block when debugging shader is being used
 					if (color.a == 0.0) {
@@ -45,6 +45,7 @@ class MaskingShader extends Shader
 					} else {
 						
 						gl_FragColor = color * vAlpha * mask.a;
+						// gl_FragColor = mask;
 						
 					}
 					

@@ -26,7 +26,6 @@ import openfl.geom.Matrix;
 class GLShape {
 	
 	private static var maskMatrix:Matrix = new Matrix();
-
 	public static inline function render (shape:DisplayObject, renderSession:RenderSession):Void {
 		
 		if (!shape.__renderable || shape.__worldAlpha <= 0 || shape.__renderedAsCachedBitmap) return;
@@ -41,7 +40,6 @@ class GLShape {
 
         // Render cache as bitmap
         if ( shape.cacheAsBitmap ) {
-            
             
 			renderSession.updateCachedBitmap( shape );
 
@@ -74,7 +72,7 @@ class GLShape {
 				CairoGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 				#end
 
-				com.geepers.DebugUtils.debugBitmap( maskGraphics.__bitmap, 1, 1 );
+				// com.geepers.DebugUtils.debugBitmap( maskGraphics.__bitmap, 1, 1 );
 			}
 			
 			var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
@@ -127,13 +125,7 @@ class GLShape {
 						shader = renderSession.shaderManager.defaultShader;
 											
 					}
-					
-					if (targetBitmap.width==512) {
-						trace("RENDERING SQUIGGLE");
-						var aa=1;
-						aa++;
-					}
-
+		
 					shader.data.uImage0.input = targetBitmap;
 					shader.data.uImage0.smoothing = renderSession.allowSmoothing;
 					shader.data.uMatrix.value = renderer.getMatrix (transform);
@@ -161,11 +153,27 @@ class GLShape {
 							graphics.__maskBitmap = shape.__renderedMask = shape.parent.__renderedMask;
 						
 						} else {			
-														
+
+							shape.__mask.__updateTransforms();
+
+							var bmd = shape.__mask.__graphics.__bitmap;
+							var transform = shape.__mask.__graphics.__worldTransform;
+							var topLeft = transform.transformPoint( new Point( 0, 0 ) );
+							var topRight = transform.transformPoint( new Point( bmd.width, 0 ) );
+							var bottomLeft = transform.transformPoint( new Point( 0, bmd.height ) );
+							var bottomRight = transform.transformPoint( new Point( bmd.width,  bmd.height ) );
+							
+							var top = Math.min( topLeft.y,  Math.min( topRight.y,  Math.min( bottomLeft.y, bottomRight.y ) ) );
+							var bottom = Math.max( topLeft.y,  Math.max( topRight.y,  Math.max( bottomLeft.y, bottomRight.y ) ) );
+							var left = Math.min( topLeft.x,  Math.min( topRight.x,  Math.min( bottomLeft.x, bottomRight.x ) ) );
+							var right = Math.max( topLeft.x,  Math.max( topRight.x,  Math.max( bottomLeft.x, bottomRight.x ) ) );
+
+							var bounds = new Rectangle( topLeft.x, topLeft.y, right - left, bottom - top );
+
 							var wt = shape.__worldTransform;
 							var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
 							var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
-							var bm = shape.mask.getBounds( shape );
+							var bm = shape.__mask.getBounds( shape );
 							var tx = sx * (bm.x - maskGraphics.__bounds.x - graphics.__bounds.x);
 							var ty = sy * (bm.y - maskGraphics.__bounds.y - graphics.__bounds.y);
 							
@@ -174,11 +182,34 @@ class GLShape {
 							maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
 							maskMatrix.translate( tx, ty );
 							
+							// maskMatrix = shape.__worldTransform.clone();
+							// maskMatrix.tx = maskMatrix.ty = 0;
+
+							var shapeTransform = shape.__worldTransform.clone();
+							var maskTransform = shape.__mask.__worldTransform.clone();
+							// shapeTransform.invert();
+							// maskTransform.concat( shapeTransform );
+
+
+
+							if (ctr<5) {
+								trace("GLShape:");
+								trace(" - shape mat:"+shape.__worldTransform);
+								trace(" - mask mat1:"+shape.mask.__worldTransform);
+								trace(" - mask mat2:"+maskMatrix);
+								trace(" - mask mat3:"+maskTransform);
+								trace(" - bounds   :"+bounds);
+								ctr++;
+							}
+							
 							if (graphics.__maskBitmap == null || graphics.__maskBitmap.width != graphics.__bitmap.width || graphics.__maskBitmap.height != graphics.__bitmap.height)
 								graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
 
 							graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
 							graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
+
+							// com.geepers.DebugUtils.debugBitmap( maskGraphics.__bitmap, 1, 1 );
+							// com.geepers.DebugUtils.debugBitmap( graphics.__maskBitmap, 1, 3 );
 
 							shape.__renderedMask = graphics.__maskBitmap;
 							
@@ -254,12 +285,6 @@ class GLShape {
 		var renderer:GLRenderer = cast renderSession.renderer;
 		var shader = renderSession.shaderManager.defaultShader;
 
-					if (targetBitmap.width==512) {
-						trace("RENDERING SQUIGGLE");
-						var aa=1;
-						aa++;
-					}
-
 		shader.data.uImage0.input = targetBitmap;
 		shader.data.uImage0.smoothing = renderSession.allowSmoothing;
 		shader.data.uMatrix.value = renderer.getMatrix (transform);
@@ -267,7 +292,11 @@ class GLShape {
 		renderSession.blendModeManager.setBlendMode (shape.blendMode);
 		renderSession.shaderManager.setShader (shader);
 		renderSession.maskManager.pushObject (shape);
-
+							
+		renderSession.shaderManager.setActiveTexture( 0 );
+		
+		gl.bindBuffer (gl.ARRAY_BUFFER, targetBitmap.getBuffer (gl, shape.__worldAlpha));
+		
 		if (renderSession.allowSmoothing) {
 			
 			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -279,9 +308,7 @@ class GLShape {
 			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 			
 		}
-							
 		
-		gl.bindBuffer (gl.ARRAY_BUFFER, targetBitmap.getBuffer (gl, shape.__worldAlpha));
 		gl.vertexAttribPointer (shader.data.aPosition.index, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
 		gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
 		gl.vertexAttribPointer (shader.data.aAlpha.index, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
