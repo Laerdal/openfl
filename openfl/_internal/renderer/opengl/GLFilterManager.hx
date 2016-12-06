@@ -80,6 +80,7 @@ class GLFilterManager extends AbstractFilterManager {
 				displacedSource = null;
 
 				object.__filterDirty = false;
+				
 			}
 			
 		}
@@ -115,7 +116,7 @@ class GLFilterManager extends AbstractFilterManager {
 	
 	public override function popObject (object:DisplayObject):Void {
 		
-		if (object.__filters != null && object.__filters.length > 0) {
+		if (object.__filters != null && object.__filters.length > 0 && !renderSession.filterManager.useCPUFilters ) {
 			
 			var numPasses:Int = 0;
 			
