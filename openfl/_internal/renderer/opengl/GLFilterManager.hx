@@ -50,7 +50,6 @@ class GLFilterManager extends AbstractFilterManager {
 					bounds.width = Math.max( bounds.width, filterBounds.width);
 					bounds.height = Math.max( bounds.height, filterBounds.height);
 				}
-				trace("BOUNDS:"+bounds);
 				
 				var displacedSource = new BitmapData(Std.int(bounds.width), Std.int(bounds.height), src.transparent, 0x0);
 				displacedSource.copyPixels( src, src.rect, new Point( bounds.x, bounds.y ) );

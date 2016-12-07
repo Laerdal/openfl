@@ -46,16 +46,19 @@ class GLShape {
 			renderSession.maskManager.pushObject (shape);
 			renderSession.filterManager.pushObject (shape);
 
-            if (renderSession.filterManager.useCPUFilters && shape.filters != null && shape.filters.length > 0) {
-                    
-                renderFilterBitmap( shape, renderSession );
-            
-                stdRender = shape.filters[0].__preserveOriginal;
-            } 
+			if (shape.__cachedBitmap != null) {
 
-			if (stdRender)
-				renderCacheAsBitmap( shape, renderSession );
- 		
+				if (renderSession.filterManager.useCPUFilters && shape.filters != null && shape.filters.length > 0) {
+						
+					renderFilterBitmap( shape, renderSession );
+				
+					stdRender = shape.filters[0].__preserveOriginal;
+				} 
+
+				if (stdRender)
+					renderCacheAsBitmap( shape, renderSession );
+			}
+
 			renderSession.filterManager.popObject (shape);
 			renderSession.maskManager.popObject (shape);
 
@@ -72,7 +75,6 @@ class GLShape {
 				CairoGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 				#end
 
-				// com.geepers.DebugUtils.debugBitmap( maskGraphics.__bitmap, 1, 1 );
 			}
 			
 			var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
@@ -93,26 +95,6 @@ class GLShape {
 					var shader;
 					var targetBitmap = graphics.__bitmap;
 					var transform = graphics.__worldTransform;
-
-					// if (shape.__name.indexOf("Star")>-1 || shape.__name.indexOf("CAB")>-1 && !Test1.DONE) {
-					// 	trace("GLShape:"+shape.__name+" transform:"+transform);
-					// 	var wt = transform;
-					// 	var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.b * wt.b ) );
-					// 	var sy = Math.sqrt( ( wt.c * wt.c ) + ( wt.d * wt.d ) );
-					// 	var dtX = wt.deltaTransformPoint( new Point(0, 1) );
-					// 	var dtY = wt.deltaTransformPoint( new Point(1, 0) );
-					// 	var skx = (180 / Math.PI) * Math.atan2(dtX.y, dtX.x) - 90;
-					// 	var sky = (180 / Math.PI) * Math.atan2(dtY.y, dtY.x);
-					// 	var sign = Math.atan(-wt.c / wt.a);
-					// 	var rot = 180 / Math.PI * ( Math.acos( wt.a / sx ));
-					// 	if ((rot>90 && sign>0) || (rot<90 && sign<0))
-					// 		rot = 360 - rot; 
-
-					// 	trace(" - T:"+wt.tx+"/"+wt.ty);
-					// 	trace(" - S:"+sx+"/"+sy);
-					// 	trace(" - SK:"+skx+"/"+sky);
-					// 	trace(" - R:"+rot);
-					// }
 
 					if (isMasked) {
 
@@ -181,35 +163,15 @@ class GLShape {
 							maskMatrix.translate( maskGraphics.__bounds.x * sx, maskGraphics.__bounds.y * sy );
 							maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
 							maskMatrix.translate( tx, ty );
-							
-							// maskMatrix = shape.__worldTransform.clone();
-							// maskMatrix.tx = maskMatrix.ty = 0;
 
 							var shapeTransform = shape.__worldTransform.clone();
 							var maskTransform = shape.__mask.__worldTransform.clone();
-							// shapeTransform.invert();
-							// maskTransform.concat( shapeTransform );
-
-
-
-							if (ctr<5) {
-								trace("GLShape:");
-								trace(" - shape mat:"+shape.__worldTransform);
-								trace(" - mask mat1:"+shape.mask.__worldTransform);
-								trace(" - mask mat2:"+maskMatrix);
-								trace(" - mask mat3:"+maskTransform);
-								trace(" - bounds   :"+bounds);
-								ctr++;
-							}
 							
 							if (graphics.__maskBitmap == null || graphics.__maskBitmap.width != graphics.__bitmap.width || graphics.__maskBitmap.height != graphics.__bitmap.height)
 								graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
 
 							graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
 							graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
-
-							// com.geepers.DebugUtils.debugBitmap( maskGraphics.__bitmap, 1, 1 );
-							// com.geepers.DebugUtils.debugBitmap( graphics.__maskBitmap, 1, 3 );
 
 							shape.__renderedMask = graphics.__maskBitmap;
 							
@@ -242,8 +204,6 @@ class GLShape {
 		
 	}
 
-	static var ctr = 0;
-
 	private static inline function renderFilterBitmap (shape:DisplayObject, renderSession:RenderSession):Void {
 
 		var shapeTransform = shape.__graphics == null ? shape.__worldTransform.clone() : shape.__graphics.__worldTransform.clone();
@@ -267,14 +227,6 @@ class GLShape {
 		pt = transform.deltaTransformPoint( pt );
 		transform.translate( pt.x, pt.y );
 		transform.translate( -shape.__cacheAsBitmapMatrix.tx, -shape.__cacheAsBitmapMatrix.ty );
-
-		if (ctr++ < 3) {
-			trace("Render:"+shape.name+" filters="+shape.filters);        
-			trace(" - ShapeTransform:"+shape.__transform);
-			trace(" - ShapeWTransform:"+shape.__worldTransform);
-			trace(" - ShapeCABTransform:"+shape.__cacheAsBitmapMatrix);
-			trace(" - ParentWTransfrm:"+shape.parent.__worldTransform);
-		}
 
 		renderBitmapTexture( targetBitmap, transform, shape, renderSession );
 	}
@@ -316,6 +268,5 @@ class GLShape {
 		gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
 						
 	}
-
 
 }

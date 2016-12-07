@@ -76,14 +76,9 @@ class RenderSession {
 	}
 	
 
-	private var done:Bool = false;
-	private var stop:Bool = false;
 	public function updateCachedBitmap( shape:DisplayObject ) {
 
 		var dirty = (shape.__cachedShapeBounds == null) || hierarchyDirty( shape );
-
-		if (!done)
-			trace("CachedBitmaps:"+shape.name+" type:"+Type.getClassName(Type.getClass( shape )));
 
 		if (dirty) {
 
@@ -101,94 +96,73 @@ class RenderSession {
 			bounds.height = shape.__maxCacheAsBitmapBounds.y - shape.__minCacheAsBitmapBounds.y;
 
 			var offset = new Point( bounds.x, bounds.y );
-			if (shape.__cachedShapeBounds == null) {
-				trace("THIS IS NULL");
-				var aa = 1;
-				aa++;
-			}
 			offset.x -= shape.__cachedShapeBounds.x;
 			offset.y -= shape.__cachedShapeBounds.y;
 
-			if (!done) {
-				trace("MAXBOUNDS:"+bounds);
-				trace(" - offset:"+offset);
-			}
-
 			offsetCachedBitmapBounds( shape, offset );
 
-			shape.__cachedBitmap = new BitmapData( Std.int(bounds.width), Std.int(bounds.height), true, 0x0 );
+			if (bounds.width > 0 && bounds.height > 0) {
 
-			flatten( shape, shape.__cachedBitmap );
+				shape.__cachedBitmap = new BitmapData( Std.int(bounds.width), Std.int(bounds.height), true, 0x0 );
 
-			// com.geepers.DebugUtils.debugBitmap( shape.__cachedBitmap, 0.25 );	
-		
+				flatten( shape, shape.__cachedBitmap );
+			
+			} else {
+
+				shape.__cachedBitmap = null;
+
+			}
+
 			shape.__filterDirty = true;
 
-			if (!done) {
-				// Test1.ADD( shape.__cachedBitmap );
-				done = true;
-				stop = true;
-			}
-			ctr++;
 		}
 	}
 
 
 	private function hierarchyDirty( shape:DisplayObject ):Bool {
-		
+
+		var dirty = false;
+
 		if (Std.is(shape, DisplayObjectContainer)) {
 			var cont:DisplayObjectContainer = cast shape;
 			for (i in 0...cont.numChildren) {
-				if (hierarchyDirty( cont.getChildAt( i ) )) 
-					return true;
+				dirty = dirty || hierarchyDirty( cont.getChildAt( i ) ); 
 			}
 		}
-
-		if (!done)
-			trace("  - shape:"+shape.name+" mask:"+shape.__mask+" scrollRect:"+shape.__scrollRect);
-
-		if (!done && shape.__mask != null) {
-			com.geepers.DebugUtils.debugSprite( cast shape.__mask );
-			var a = 1;
-			a++;
-		}
-
+		
 		if (shape.__filterDirty) {
 			shape.__filterDirty = false;
-			return true;
+			dirty = true;
 		}
 
 		if (shape.__transformDirty) {
 			shape.__transformDirty = false;
-			return true;
+			dirty = true;
 		}
 
 		if (shape.__renderDirty) {
 			shape.__renderDirty = false;
-			return true;
+			dirty = true;
 		}
 
 		if (shape.__graphics != null && shape.__graphics.__dirty) {
 			shape.__graphics.__dirty = false;
-			return true;
+			dirty = true;
 		}
 
 		var bitmap:Bitmap = cast shape;
-		if (bitmap == null || !bitmap.__renderable || bitmap.__worldAlpha <= 0 || bitmap.bitmapData == null) 
-			return false;
-
-		if (bitmap.bitmapData != null && bitmap.bitmapData.image.dirty) {
+		if (Std.is(shape, Bitmap) && bitmap.__renderable && bitmap.__worldAlpha > 0 && bitmap.bitmapData != null && bitmap.bitmapData.image.dirty) {
 			bitmap.bitmapData.image.dirty = false;
-			return true;
+			dirty = true;
 		}
 
 		var textField:TextField = cast shape;
 		if ( Std.is(shape, TextField) && textField.__dirty) {
-			return true;
+			dirty = true;
 		}
 
 
-		return false;
+		return dirty;
 	}
 
 	private function getCachedBitmapBounds (shape:DisplayObject, cacheAsBitmapShape:DisplayObject, point:Point = null ) {
@@ -206,7 +180,6 @@ class RenderSession {
 
 		if (graphics!=null) {
 			
-			// CanvasGraphics.render (graphics, this, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			#if (js && html5)
 			CanvasGraphics.render (graphics, this, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			#elseif lime_cairo
@@ -220,30 +193,9 @@ class RenderSession {
 				if (point == null)
 					point = new Point( shape.__graphics.__worldTransform.tx,  shape.__graphics.__worldTransform.ty );
 				
-				if (!stop) {
-					trace("Setting CAB:"+shape.name+" - "+shape.__cacheAsBitmapMatrix);
-					trace(" - point:"+point);
-				}
 				shape.__cacheAsBitmapMatrix.tx -= point.x;
 				shape.__cacheAsBitmapMatrix.ty -= point.y;
 				
-				if (!stop) {
-					trace(" - new TX:"+shape.__cacheAsBitmapMatrix.tx+"/"+shape.__cacheAsBitmapMatrix.ty);
-					
-					// var b = graphics.__bitmap;
-					// b.fillRect( new Rectangle( 0,0,10,10), 0xffff0000);
-					// b.fillRect( new Rectangle( 0,0,b.width,b.height), 0x1000ff00);
-					trace("getCachedBitmapBounds:name="+shape.name);
-					trace(" - wt:"+shape.__worldTransform);
-					trace(" - rt:"+shape.__renderTransform);
-					trace(" - t:"+shape.__transform);
-					trace(" - gwt:"+shape.__graphics.__worldTransform);
-					trace(" - grt:"+shape.__graphics.__renderTransform);
-					trace(" - CABM:"+shape.__cacheAsBitmapMatrix);
-					var a = 1;
-					a++;
-				}
-					
 				updateBoundsRectangle( shape, graphics.__bitmap, cacheAsBitmapShape, point );
 
 			}
@@ -256,10 +208,6 @@ class RenderSession {
 				cacheAsBitmapShape.__cachedShapeBounds = new Rectangle( point.x, point.y, 0, 0 );
 			}
 
-			if (!stop) {
-				trace("Setting CAB - was NULL after graphics:"+shape.name+" - "+shape.__cacheAsBitmapMatrix);
-				trace(" - point:"+point);
-			}
 		}
 
 		var bitmap:Bitmap = cast shape;
@@ -271,9 +219,6 @@ class RenderSession {
 				bitmap.__cacheAsBitmapMatrix = bitmap.__worldTransform.clone();
 				bitmap.__cacheAsBitmapMatrix.tx -= point.x;
 				bitmap.__cacheAsBitmapMatrix.ty -= point.y;
-
-				if (!stop) 
-					trace(" - new TX:"+shape.__cacheAsBitmapMatrix.tx+"/"+shape.__cacheAsBitmapMatrix.ty);
 
 				updateBoundsRectangle( bitmap, bitmap.bitmapData, cacheAsBitmapShape, point );
 			}
@@ -310,7 +255,6 @@ class RenderSession {
 
 	}
 
-	var objCtr:Int = 0;
 	private function updateBoundsRectangle( shape:DisplayObject, bmd:BitmapData, cacheAsBitmapShape:DisplayObject, point:Point ) {
 
 		var transform = shape.__graphics != null ? shape.__graphics.__worldTransform : shape.__worldTransform;
@@ -326,15 +270,6 @@ class RenderSession {
 
 		shape.__cachedShapeBounds = new Rectangle( topLeft.x, topLeft.y, right - left, bottom - top );
 
-		if (shape.__mask != null || shape.__isMask) {
-			trace(" - updateBoundsRectangle:");
-			trace("   - shape:"+shape.__name);
-			trace("   - ismask:"+shape.__isMask);
-			trace("   - mask:"+(shape.__mask!=null ? shape.__mask.__name : "null"));
-			trace("   - PRE-minCABBounds:"+cacheAsBitmapShape.__minCacheAsBitmapBounds);
-			trace("   - PRE-maxCABBounds:"+cacheAsBitmapShape.__maxCacheAsBitmapBounds);
-		}
-
 		if (!shape.__isMask) {
 
 			cacheAsBitmapShape.__minCacheAsBitmapBounds.x = Math.min( cacheAsBitmapShape.__minCacheAsBitmapBounds.x, left);
@@ -344,39 +279,13 @@ class RenderSession {
 
 		}
 
-
-		if (shape.__mask != null || shape.__isMask) {
-			// var colA:Array<UInt> = [ 0x0, 0x880000, 0x00aa00, 0x0000aa, 0x880088, 0x888800, 0x008888 ];
-			// var c = colA[ objCtr++ ];
-			// com.geepers.DebugUtils.draw( topLeft, topRight, c );
-			// com.geepers.DebugUtils.draw( topRight, bottomRight, c );
-			// com.geepers.DebugUtils.draw( bottomRight, bottomLeft, c );
-			// com.geepers.DebugUtils.draw( bottomLeft, topLeft, c );
-
-			trace("   - cab:"+shape.__cacheAsBitmapMatrix);
-			trace("   - bitmap:"+bmd.width+"/"+bmd.height);
-			trace("   - topL/R:"+topLeft+"/"+topRight+" bottomL/R:"+bottomLeft+"/"+bottomRight);
-			trace("   - cachedShapeBounds:"+shape.__cachedShapeBounds);
-			trace("   - minCABBounds:"+cacheAsBitmapShape.__minCacheAsBitmapBounds);
-			trace("   - maxCABBounds:"+cacheAsBitmapShape.__maxCacheAsBitmapBounds);
-		}
-
 	}
 
 	private function offsetCachedBitmapBounds (shape:DisplayObject, boundsOffset:Point ) {
 
-		if (!stop) {
-			trace("offsetCachedBitmapBounds:"+shape.name);
-			trace(" - cachedShapeBounds:"+shape.__cachedShapeBounds);
-			trace(" - boundsOffset:"+boundsOffset);
-		}
-
 		shape.__cacheAsBitmapMatrix.tx += -boundsOffset.x;	
 		shape.__cacheAsBitmapMatrix.ty += -boundsOffset.y;
 	
-		if (!stop)
-			trace(" - new :"+shape.__cacheAsBitmapMatrix.tx+"/"+shape.__cacheAsBitmapMatrix.ty);
-		
 		if (Std.is(shape, DisplayObjectContainer)) {
 			
 			var cont:DisplayObjectContainer = cast shape;
@@ -393,23 +302,15 @@ class RenderSession {
 	}
 
 
-	private static var ctr:Int = 0;
-	private static var ctr2:Int = 0;
 	private function flatten (shape:DisplayObject, flattendBmd:BitmapData  ) {
 
 		if (!shape.__renderable || !shape.__visible || shape.__worldAlpha <= 0 || shape.__isMask) return;
 
-		if (!done) {
-			trace("flatten:"+shape.__name+" type:"+Type.getClassName( Type.getClass( shape )));
-			trace(" - hasMask:"+(shape.mask==null ? "false" : "true mask:"+shape.mask.__name+" type:"+Type.getClassName( Type.getClass( shape.mask ))));
-			trace(" - cabm:"+shape.__cacheAsBitmapMatrix);
-			trace(" - cachedShapeBounds:"+shape.__cachedShapeBounds);
-		}
-
 		var layer = new BitmapData( flattendBmd.width, flattendBmd.height, true, 0x0 );
 
 		var graphics = shape.__graphics;
-		if (graphics!=null) {
+		
+		if (graphics != null) {
 
 			#if (js && html5)
 			CanvasGraphics.render (graphics, this, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
@@ -417,7 +318,7 @@ class RenderSession {
 			CairoGraphics.render (graphics, this, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			#end
 			
-			if (graphics.__bitmap!=null) {
+			if (graphics.__bitmap != null) {
 
 				layer.draw( graphics.__bitmap, shape.__cacheAsBitmapMatrix, null, null, null, true );
 
@@ -425,6 +326,7 @@ class RenderSession {
 		}
 
 		var bitmap:Bitmap = cast shape;
+		
 		if (bitmap != null && (bitmap.__renderable || bitmap.__worldAlpha > 0) && bitmap.bitmapData != null) {
 
 			layer.draw( bitmap.bitmapData, shape.__cacheAsBitmapMatrix, null, null, null, true );
@@ -434,6 +336,7 @@ class RenderSession {
 		if (Std.is(shape, DisplayObjectContainer)) {
 
 			var cont:DisplayObjectContainer = cast shape;
+			
 			for (i in 0...cont.numChildren) {
 
 				flatten( cont.getChildAt( i ), layer );
@@ -443,17 +346,8 @@ class RenderSession {
 
 		if (shape.__mask != null) {
 
-			if (!done) {
-				trace("Attempting to draw the alpha channel as a mask over the bitmap");
-				trace(" - shape/mask:"+shape.__name+"/"+shape.__mask.__name);
-				trace(" - layer:"+layer.width+"/"+layer.height);
-				trace(" - mask-mat:"+shape.__mask.__cacheAsBitmapMatrix);
-				trace(" - shap-mat:"+shape.__cacheAsBitmapMatrix);
-			}
 			var maskBitmap = new BitmapData( layer.width, layer.height, true, 0x0 );
 			maskBitmap.draw( shape.__mask.__graphics.__bitmap,  shape.__mask.__cacheAsBitmapMatrix , null, null, null, true );
-
-			// com.geepers.DebugUtils.debugBitmap( maskBitmap );
 
 			var sw:Int = Std.int (layer.width);
 			var sh:Int = Std.int (layer.height);
@@ -472,7 +366,6 @@ class RenderSession {
 				srcA = (srcValue >> 24) & 0xFF;
 				maskA = (maskValue >> 24) & 0xFF;
 				color = ( srcValue & 0xFFFFFF) | (Std.int(srcA * maskA / 0xFF) << 24);
-				// color = ( srcValue & 0xFFFFFF) | (Std.int(srcA | maskA) << 24);
 				
 				srcPxls.position = i * 4;
 				srcPxls.writeUnsignedInt (color);
@@ -483,14 +376,11 @@ class RenderSession {
 			srcPxls = maskPxls = null;
 		}
 
-		// com.geepers.DebugUtils.debugBitmap( layer );
-
 		flattendBmd.draw( layer, null, null, null, null, true );
-
-// com.geepers.DebugUtils.debugBitmap( flattendBmd );
 
 		layer.dispose();
 		layer = null;
+
 	}	
 	
 }
