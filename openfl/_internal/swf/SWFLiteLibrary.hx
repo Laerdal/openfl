@@ -183,7 +183,6 @@ import openfl.Assets;
 			onLoad = function (?bitmapData) {
 				
 				loaded++;
-				trace("SWFLiteLibrary onLoad", loaded, total);
 				
 				promise.progress (loaded * 1000, total * 1000);
 				
@@ -208,7 +207,6 @@ import openfl.Assets;
 								
 								var weightedLoad  : Int = (loaded * 1000) + Std.int((bytesLoaded / bytesTotal) * 1000);
 								var weightedTotal : Int = total * 1000;
-								trace ("BitmapData loaded", bytesLoaded, bytesTotal, weightedLoad, weightedTotal, weightedLoad/weightedTotal);
 								promise.progress (weightedLoad, weightedTotal);
 								
 							}).onError (promise.error);
