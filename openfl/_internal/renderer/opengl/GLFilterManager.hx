@@ -96,7 +96,7 @@ class GLFilterManager extends AbstractFilterManager {
 		
 		// TODO: Support one-pass filters?
 		
-		if (object.__filters != null && object.__filters.length > 0) {
+		if (object.__filters != null && object.__filters.length > 0 && !renderSession.filterManager.useCPUFilters ) {
 			
 			if (Std.is (object.__filters[0], GlowFilter) && Std.is (object, TextField)) {
 				

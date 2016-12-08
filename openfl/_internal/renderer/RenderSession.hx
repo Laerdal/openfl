@@ -325,7 +325,7 @@ class RenderSession {
 			
 			if (graphics.__bitmap != null) {
 
-				layer.draw( graphics.__bitmap, shape.__cacheAsBitmapMatrix, null, null, null, true );
+				layer.draw( graphics.__bitmap, shape.__cacheAsBitmapMatrix, shape.__worldColorTransform, null, null, true );
 
 			}
 		}
@@ -334,7 +334,7 @@ class RenderSession {
 		
 		if (bitmap != null && (bitmap.__renderable || bitmap.__worldAlpha > 0) && bitmap.bitmapData != null) {
 
-			layer.draw( bitmap.bitmapData, shape.__cacheAsBitmapMatrix, null, null, null, true );
+			layer.draw( bitmap.bitmapData, shape.__cacheAsBitmapMatrix, shape.__worldColorTransform, null, null, true );
 
 		}
 				
