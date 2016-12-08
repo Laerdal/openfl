@@ -93,7 +93,7 @@ class GLFilterManager extends AbstractFilterManager {
 		
 		// TODO: Support one-pass filters?
 		
-		if (object.__filters != null && object.__filters.length > 0) {
+		if (object.__filters != null && object.__filters.length > 0 && !renderSession.filterManager.useCPUFilters ) {
 			
 			if (object.__filters.length == 1 && object.__filters[0].__numPasses == 0) {
 				
