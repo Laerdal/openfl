@@ -179,7 +179,7 @@ import openfl.Assets;
 			
 			var loaded = -1, total = bitmapSymbols.length;
 			
-			var onLoad : ?Dynamic -> Void;
+			var onLoad : ?Dynamic -> Void = null;
 			onLoad = function (?bitmapData) {
 				
 				loaded++;
