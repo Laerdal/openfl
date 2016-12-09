@@ -48,8 +48,6 @@ class GLShape {
 			
 			renderSession.updateCachedBitmap( shape );
 
-			renderSession.maskManager.pushObject (shape);
-
 			if (shape.__cachedBitmap != null) {
 
 				if (renderSession.filterManager.useCPUFilters && shape.filters != null && shape.filters.length > 0) {
@@ -65,16 +63,28 @@ class GLShape {
 			
 			}
 
-			renderSession.maskManager.popObject (shape);
-
         } else {
 
 			if (graphics != null) {
 
+				//// Render mask
+				if (shape.mask != null) {
+					mask = shape.__mask;
+					maskGraphics = shape.__mask.__graphics;
+
+					#if (js && html5)
+					CanvasGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+					#elseif lime_cairo
+					CairoGraphics.render (maskGraphics, renderSession, shape.__renderTransform, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+					#end
+				}
+				
+				var isMasked = (maskGraphics != null && maskGraphics.__bitmap != null) || shape.parent.__renderedMask != null;
+
 				#if (js && html5)
-				CanvasGraphics.render (graphics, renderSession, shape.__renderTransform);
+				CanvasGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform);
 				#elseif lime_cairo
-				CairoGraphics.render (graphics, renderSession, shape.__renderTransform);
+				CairoGraphics.render (graphics, renderSession, shape.__renderTransform, shape.__worldColorTransform);
 				#end
 
 				if (graphics.__bitmap != null && graphics.__visible) {
@@ -89,14 +99,65 @@ class GLShape {
                     renderSession.blendModeManager.setBlendMode (shape.__worldBlendMode);
                     renderSession.maskManager.pushObject (shape);
                 
-                    var shader = renderSession.filterManager.pushObject (shape);
-                
+					if (isMasked) {
+
+						shader = renderSession.shaderManager.defaultMaskingShader;
+						shader.data.uImage1.input = graphics.__bitmap;
+						shader.data.uImage1.smoothing = renderSession.allowSmoothing;
+						
+					} else {
+						
+						shader = renderSession.filterManager.pushObject (shape);
+											
+					}
+               
                     shader.data.uImage0.input = graphics.__bitmap;
                     shader.data.uImage0.smoothing = renderSession.allowSmoothing;
                     shader.data.uMatrix.value = renderer.getMatrix (graphics.__worldTransform);
                 
                     renderSession.shaderManager.setShader (shader);
                 
+					if (isMasked) {
+
+						if (shape.parent.__renderedMask != null) {
+		
+							graphics.__maskBitmap = shape.__renderedMask = shape.parent.__renderedMask;
+						
+						} else {			
+														
+							var wt = shape.__worldTransform;
+							var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
+							var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
+							var bm = shape.mask.getBounds( shape );
+							var tx = sx * (bm.x - maskGraphics.__bounds.x - graphics.__bounds.x);
+							var ty = sy * (bm.y - maskGraphics.__bounds.y - graphics.__bounds.y);
+							
+							maskMatrix.identity();
+							maskMatrix.translate( maskGraphics.__bounds.x * sx, maskGraphics.__bounds.y * sy );
+							maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
+							maskMatrix.translate( tx, ty );
+							
+							if (graphics.__maskBitmap == null || graphics.__maskBitmap.width != graphics.__bitmap.width || graphics.__maskBitmap.height != graphics.__bitmap.height)
+								graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
+
+							graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
+							graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
+
+							shape.__renderedMask = graphics.__maskBitmap;
+							
+						}
+						
+						renderSession.shaderManager.setActiveTexture( 1 );
+						
+						gl.bindTexture (gl.TEXTURE_2D, graphics.__maskBitmap.getTexture (gl));
+						
+						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+						renderSession.shaderManager.setActiveTexture( 0 );
+					}
+
+
                     gl.bindBuffer (gl.ARRAY_BUFFER, graphics.__bitmap.getBuffer (gl, shape.__worldAlpha));
                     gl.vertexAttribPointer (shader.data.aPosition.index, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
                     gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
@@ -106,7 +167,7 @@ class GLShape {
                 
                     renderSession.filterManager.popObject (shape);
                     renderSession.maskManager.popObject (shape);
-               
+
                 }
 
             }
@@ -118,7 +179,7 @@ class GLShape {
 
 	private static inline function renderFilterBitmap (shape:DisplayObject, renderSession:RenderSession):Void {
 
-		var shapeTransform = shape.__graphics == null ? shape.__worldTransform.clone() : shape.__graphics.__worldTransform.clone();
+		var shapeTransform = shape.__worldTransform.clone();
 		var targetBitmap = renderSession.filterManager.renderFilters( shape, shape.__cachedBitmap );
 		var transform = new Matrix();
 		var pt = new Point ( shapeTransform.tx, shapeTransform.ty );
@@ -132,7 +193,7 @@ class GLShape {
 
 	private static inline function renderCacheAsBitmap (shape:DisplayObject, renderSession:RenderSession):Void {
 
-		var shapeTransform = shape.__graphics == null ? shape.__worldTransform.clone() : shape.__graphics.__worldTransform.clone();
+		var shapeTransform = shape.__worldTransform.clone();
 		var targetBitmap = shape.__cachedBitmap;
 		var transform = new Matrix();
 		var pt = new Point ( shapeTransform.tx, shapeTransform.ty );
