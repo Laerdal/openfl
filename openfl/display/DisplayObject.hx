@@ -603,7 +603,14 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 		
 	}
 	
-	
+
+    private function __setGraphicsDirty ():Void {
+
+        // implemented in subclasses that have Graphics or renderable Text
+        
+    }
+
+
 	private inline function __setRenderDirty ():Void {
 		
 		if (!__renderDirty) {

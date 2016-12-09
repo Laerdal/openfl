@@ -181,9 +181,9 @@ class RenderSession {
 		if (graphics!=null) {
 			
 			#if (js && html5)
-			CanvasGraphics.render (graphics, this, null);
+			CanvasGraphics.render (graphics, this, null, shape.__worldColorTransform);
 			#elseif lime_cairo
-			CairoGraphics.render (graphics, this, null);
+			CairoGraphics.render (graphics, this, null, shape.__worldColorTransform);
 			#end
 			
 			if (graphics.__bitmap != null) {
@@ -210,6 +210,7 @@ class RenderSession {
 
 		}
 
+
 		var bitmap:Bitmap = cast shape;
 		if (Std.is( shape, Bitmap )) {
 
@@ -233,9 +234,9 @@ class RenderSession {
 		if (shape.__mask != null) {
 
 			#if (js && html5)
-			CanvasGraphics.render (shape.__mask.__graphics, this, null);
+			CanvasGraphics.render (shape.__mask.__graphics, this, null, shape.__worldColorTransform);
 			#elseif lime_cairo
-			CairoGraphics.render (shape.__mask.__graphics, this, null);
+			CairoGraphics.render (shape.__mask.__graphics, this, null, shape.__worldColorTransform);
 			#end
 
 			updateBoundsRectangle( shape.__mask, shape.__mask.__graphics.__bitmap, cacheAsBitmapShape, point );	
@@ -313,9 +314,9 @@ class RenderSession {
 		if (graphics!=null) {
 
 			#if (js && html5)
-			CanvasGraphics.render (graphics, this, null);
+			CanvasGraphics.render (graphics, this, null, shape.__worldColorTransform);
 			#elseif lime_cairo
-			CairoGraphics.render (graphics, this, null);
+			CairoGraphics.render (graphics, this, null, shape.__worldColorTransform);
 			#end
 			
 			if (graphics.__bitmap != null) {
