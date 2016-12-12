@@ -352,6 +352,17 @@ class MovieClip extends Sprite #if openfl_dynamic implements Dynamic<DisplayObje
 			
 			displayObject.transform.matrix = frameObject.matrix;
 			
+			var dynamicTextField:TextField;
+			
+			if (Std.is (displayObject, TextField)) @:privateAccess {
+				
+				dynamicTextField = cast displayObject;
+				
+				displayObject.x += dynamicTextField.__symbol.x;
+				displayObject.y += dynamicTextField.__symbol.y #if flash + 4 #end;
+				
+			}
+			
 		}
 		
 		displayObject.transform.colorTransform = (frameObject.colorTransform != null) ? frameObject.colorTransform : __noColorTranform;

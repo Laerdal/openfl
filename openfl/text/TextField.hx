@@ -100,8 +100,6 @@ class TextField extends InteractiveObject {
 	private var __isHTML:Bool;
 	private var __layoutDirty:Bool;
 	private var __mouseWheelEnabled:Bool;
-	private var __offsetX:Float;
-	private var __offsetY:Float;
 	private var __selectionIndex:Int;
 	private var __showCursor:Bool;
 	private var __symbol:DynamicTextSymbol;
@@ -123,8 +121,6 @@ class TextField extends InteractiveObject {
 		__graphics = new Graphics (this);
 		__textEngine = new TextEngine (this);
 		__layoutDirty = true;
-		__offsetX = 0;
-		__offsetY = 0;
 		__tabEnabled = true;
 		__mouseWheelEnabled = true;
 		__text = "";
@@ -618,9 +614,6 @@ class TextField extends InteractiveObject {
 		width = symbol.width;
 		height = symbol.height;
 		
-		__offsetX = symbol.x;
-		__offsetY = symbol.y;
-		
 		multiline = symbol.multiline;
 		wordWrap = symbol.wordWrap;
 		displayAsPassword = symbol.password;
@@ -742,8 +735,6 @@ class TextField extends InteractiveObject {
 		
 		var bounds = Rectangle.__temp;
 		bounds.copyFrom (__textEngine.bounds);
-		bounds.x += __offsetX;
-		bounds.y += __offsetY;
 		bounds.__transform (bounds, matrix);
 		
 		rect.__expand (bounds.x, bounds.y, bounds.width, bounds.height);
