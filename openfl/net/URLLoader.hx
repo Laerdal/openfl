@@ -64,9 +64,13 @@ class URLLoader extends EventDispatcher {
 			
 			httpRequest.load ()
 				.onProgress (httpRequest_onProgress)
-				.onError (httpRequest_onError)
+				.onError (function(error){
+					__dispatchStatus(httpRequest.responseStatus);
+					httpRequest_onError(error);
+				})
 				.onComplete (function (data:ByteArray):Void {
-					
+					__dispatchStatus(httpRequest.responseStatus);
+
 					this.data = data;
 					
 					var event = new Event (Event.COMPLETE);
@@ -81,9 +85,13 @@ class URLLoader extends EventDispatcher {
 			
 			httpRequest.load ()
 				.onProgress (httpRequest_onProgress)
-				.onError (httpRequest_onError)
+				.onError (function(error){
+					__dispatchStatus(httpRequest.responseStatus);
+					httpRequest_onError(error);
+				})
 				.onComplete (function (data:String):Void {
-					
+					__dispatchStatus(httpRequest.responseStatus);
+
 					this.data = data;
 					
 					var event = new Event (Event.COMPLETE);
@@ -95,7 +103,12 @@ class URLLoader extends EventDispatcher {
 		
 	}
 	
-	
+	private function __dispatchStatus(status : Int) {
+		if (status != 0) {
+			dispatchEvent(new HTTPStatusEvent(HTTPStatusEvent.HTTP_STATUS, false, false, status));
+		}
+	}
+
 	private function __prepareRequest (httpRequest:#if display Dynamic #else _IHTTPRequest #end, request:URLRequest):Void {
 		
 		__httpRequest = httpRequest;
