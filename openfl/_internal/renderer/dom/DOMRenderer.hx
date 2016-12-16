@@ -108,7 +108,10 @@ class DOMRenderer extends AbstractRenderer {
 			} else {
 				
 				var clip = displayObject.__worldClip;
-				style.setProperty ("clip", "rect(" + clip.y + "px, " + clip.right + "px, " + clip.bottom + "px, " + clip.x + "px)", null);
+				style.setProperty ("clip", "rect(" + Math.round(clip.y) + "px," + Math.round(clip.right) + "px," + Math.round(clip.bottom) + "px," + Math.round(clip.x) + "px)", null);
+				
+				// Workaround for Chrome otherwise not clipping <canvas> images
+				style.setProperty ("-webkit-clip-path", "inset(0)");
 				
 			}
 			
