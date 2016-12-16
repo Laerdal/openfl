@@ -835,7 +835,7 @@ class CanvasGraphics {
 	}
 	
 	
-	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
+	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform, devicePixelRatio = 1):Void {
 		
 		#if (js && html5)
 		
@@ -869,11 +869,25 @@ class CanvasGraphics {
 				
 				context = graphics.__context;
 				
-				graphics.__canvas.width = width;
-				graphics.__canvas.height = height;
+				if (devicePixelRatio > 1) {
+					
+					graphics.__canvas.width  = Std.int( width * devicePixelRatio);
+					graphics.__canvas.height = Std.int(height * devicePixelRatio);
+					graphics.__canvas.style.width  =  width + "px";
+					graphics.__canvas.style.height = height + "px";	
+					
+				} else {
+					graphics.__canvas.width  = width;
+					graphics.__canvas.height = height;	
+				}
 				
 				var transform = graphics.__renderTransform;
-				context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+				context.setTransform (transform.a  * devicePixelRatio,
+				                      transform.b  * devicePixelRatio,
+				                      transform.c  * devicePixelRatio,
+				                      transform.d  * devicePixelRatio,
+				                      transform.tx * devicePixelRatio,
+				                      transform.ty * devicePixelRatio);
 				
 				fillCommands.clear ();
 				strokeCommands.clear ();
