@@ -156,20 +156,32 @@ class CanvasTextField {
 				
 				context = graphics.__context;
 				
-				graphics.__canvas.width = width;
-				graphics.__canvas.height = height;
-				
-				var transform = graphics.__renderTransform;
-				
-				if (renderSession.roundPixels) {
+				#if dom
 					
-					context.setTransform (transform.a, transform.b, transform.c, transform.d, Std.int (transform.tx), Std.int (transform.ty));
+					var devicePixelRatio = untyped window.devicePixelRatio || 1;
 					
-				} else {
+					graphics.__canvas.width  = Std.int( width * devicePixelRatio);
+					graphics.__canvas.height = Std.int(height * devicePixelRatio);
+					graphics.__canvas.style.width  =  width + "px";
+					graphics.__canvas.style.height = height + "px";	
 					
+					var transform = graphics.__renderTransform;
+					context.setTransform (transform.a  * devicePixelRatio,
+					                      transform.b  * devicePixelRatio,
+					                      transform.c  * devicePixelRatio,
+					                      transform.d  * devicePixelRatio,
+					                      transform.tx * devicePixelRatio,
+					                      transform.ty * devicePixelRatio);
+					
+				#else
+					
+					graphics.__canvas.width  = width;
+					graphics.__canvas.height = height;
+					
+					var transform = graphics.__renderTransform;
 					context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
 					
-				}
+				#end
 				
 				if ((textEngine.text != null && textEngine.text != "") || textEngine.__hasFocus) {
 					

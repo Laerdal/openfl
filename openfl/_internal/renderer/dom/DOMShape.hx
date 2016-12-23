@@ -26,7 +26,7 @@ class DOMShape {
 		
 		if (shape.stage != null && shape.__worldVisible && shape.__renderable && graphics != null) {
 			
-			CanvasGraphics.render (graphics, renderSession, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform, untyped window.devicePixelRatio || 1);
+			CanvasGraphics.render (graphics, renderSession, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 			
 			if (graphics.__dirty || shape.__worldAlphaChanged || (shape.__canvas != graphics.__canvas)) {
 				
