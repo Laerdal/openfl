@@ -26,7 +26,18 @@ class DOMShape {
 		
 		if (shape.stage != null && shape.__worldVisible && shape.__renderable && graphics != null) {
 			
-			CanvasGraphics.render (graphics, renderSession, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+			if (shape.__mask != null) {
+				
+				var maskGraphics = shape.__mask.__graphics;
+				var maskBounds = shape.__mask.getBounds( shape );
+				
+				CanvasGraphics.renderMasked (graphics, maskGraphics, renderSession, shape.__worldTransform, maskBounds, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				
+			} else {
+				
+				CanvasGraphics.render (graphics, renderSession, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				
+			}
 			
 			if (graphics.__dirty || shape.__worldAlphaChanged || (shape.__canvas != graphics.__canvas)) {
 				
