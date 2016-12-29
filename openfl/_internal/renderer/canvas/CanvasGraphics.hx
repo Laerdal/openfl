@@ -839,6 +839,139 @@ class CanvasGraphics {
 		
 	}
 	
+	/** Note: Setting the canvas width/height always clears the contents, even if size does not change! */
+	private static function __initCanvas (graphics:Graphics):Void {
+		
+		#if (js && html5)
+		
+		var width = graphics.__width;
+		var height = graphics.__height;
+		
+		if (!graphics.__visible || graphics.__commands.length == 0 || graphics.__bounds == null || width < 1 || height < 1) {
+			
+			graphics.__canvas = null;
+			graphics.__context = null;
+			graphics.__bitmap = null;
+			
+		} else {
+			
+			if (graphics.__canvas == null) {
+				
+				graphics.__canvas = cast Browser.document.createElement ("canvas");
+				graphics.__context = graphics.__canvas.getContext ("2d");
+				
+			}
+			
+			#if dom
+				
+				var devicePixelRatio = untyped window.devicePixelRatio || 1;
+				
+				graphics.__canvas.width  = Std.int ( width * devicePixelRatio);
+				graphics.__canvas.height = Std.int (height * devicePixelRatio);
+				graphics.__canvas.style.width  =  width + "px";
+				graphics.__canvas.style.height = height + "px";
+			
+			#else
+				
+				graphics.__canvas.width  = width;
+				graphics.__canvas.height = height;
+				
+			#end
+			
+		}
+		
+		#end
+		
+	}
+	
+	
+	public static function resetTransform (graphics:Graphics, ?parentTransform:Matrix):Void {
+		
+		#if (js && html5)
+		
+		var context = graphics.__context;
+		
+		#if dom
+			
+			var devicePixelRatio = untyped window.devicePixelRatio || 1;
+			
+			var transform = graphics.__renderTransform;
+			if (parentTransform != null) {
+				transform.concat (parentTransform);	
+			}
+			
+			context.setTransform (transform.a  * devicePixelRatio,
+			                      transform.b  * devicePixelRatio,
+			                      transform.c  * devicePixelRatio,
+			                      transform.d  * devicePixelRatio,
+			                      transform.tx * devicePixelRatio,
+			                      transform.ty * devicePixelRatio);
+			
+		#else
+			
+			var transform = graphics.__renderTransform;
+			context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+			
+		#end
+		
+		#end
+		
+	}
+	
+	
+	
+	public static function renderMasked (graphics:Graphics, maskGraphics:Graphics, renderSession:RenderSession, worldTransform:Matrix, maskBounds:Rectangle, colorTransform:ColorTransform):Void {
+		
+		#if (js && html5)
+		
+		graphics.__update ();
+		
+		if (graphics.__dirty) {
+			
+			__initCanvas (graphics);
+			
+		}
+		
+		var context = graphics.__context;
+		
+		if (maskGraphics != null && context != null) {
+			
+			maskGraphics.__update ();
+			
+			if (graphics.__dirty || maskGraphics.__dirty) {
+				
+				var wt = worldTransform;
+				var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
+				var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
+				var bm = maskBounds;//shape.__mask.getBounds( shape );
+				var tx = sx * (bm.x - maskGraphics.__bounds.x - graphics.__bounds.x);
+				var ty = sy * (bm.y - maskGraphics.__bounds.y - graphics.__bounds.y);
+				
+				var maskMatrix = maskGraphics.__renderTransform;
+				//maskMatrix.rotate( shape.__mask.rotation * Math.PI / 180 );
+				maskMatrix.translate( tx, ty );
+				
+				maskGraphics.__canvas  = graphics.__canvas;
+				maskGraphics.__context = context;
+				renderSession.context = context;
+				
+				resetTransform (maskGraphics, null);
+				
+				context.beginPath ();
+				renderMask (maskGraphics, renderSession);
+				context.clip ();
+				
+				renderSession.context = null;
+			}
+			
+		}
+		
+		__render (graphics, renderSession, null, colorTransform);
+		
+		#end
+		
+	}
+	
 	
 	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
 		
@@ -848,66 +981,31 @@ class CanvasGraphics {
 		
 		if (graphics.__dirty) {
 			
+			__initCanvas (graphics);
+			__render (graphics, renderSession, parentTransform, colorTransform);
+			
+		}
+		
+		#end
+	}
+	
+	
+	private static function __render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
+		
+		#if (js && html5)
+		
+		if (graphics.__dirty) {
+			
 			hitTesting = false;
 			
-			CanvasGraphics.graphics = graphics;
-			CanvasGraphics.allowSmoothing = renderSession.allowSmoothing;
-			bounds = graphics.__bounds;
-			
-			var width = graphics.__width;
-			var height = graphics.__height;
-			
-			if (!graphics.__visible || graphics.__commands.length == 0 || bounds == null || width < 1 || height < 1) {
+			if (graphics.__canvas != null) {
 				
-				graphics.__canvas = null;
-				graphics.__context = null;
-				graphics.__bitmap = null;
+				CanvasGraphics.graphics = graphics;
+				CanvasGraphics.allowSmoothing = renderSession.allowSmoothing;
 				
-			} else {
-				
-				if (graphics.__canvas == null) {
-					
-					graphics.__canvas = cast Browser.document.createElement ("canvas");
-					graphics.__context = graphics.__canvas.getContext ("2d");
-					
-				}
-				
+				bounds = graphics.__bounds;
 				context = graphics.__context;
-				var transform = graphics.__renderTransform;
-				
-				#if dom
-					
-					var devicePixelRatio = untyped window.devicePixelRatio || 1;
-					if (devicePixelRatio > 1) {
-						
-						graphics.__canvas.width  = Std.int( width * devicePixelRatio);
-						graphics.__canvas.height = Std.int(height * devicePixelRatio);
-						graphics.__canvas.style.width  =  width + "px";
-						graphics.__canvas.style.height = height + "px";	
-						
-						var transform = graphics.__renderTransform;
-						context.setTransform (transform.a  * devicePixelRatio,
-						                      transform.b  * devicePixelRatio,
-						                      transform.c  * devicePixelRatio,
-						                      transform.d  * devicePixelRatio,
-						                      transform.tx * devicePixelRatio,
-						                      transform.ty * devicePixelRatio);
-						
-					} else {
-						
-						graphics.__canvas.width  = width;
-						graphics.__canvas.height = height;
-						context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
-						
-					}
-					
-				#else
-					
-					graphics.__canvas.width  = width;
-					graphics.__canvas.height = height;
-					context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
-					
-				#end
+				resetTransform (graphics, parentTransform);
 				
 				fillCommands.clear ();
 				strokeCommands.clear ();
