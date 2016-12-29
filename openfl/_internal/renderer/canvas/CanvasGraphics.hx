@@ -840,47 +840,37 @@ class CanvasGraphics {
 	}
 	
 	
-	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
+	/** Note: Setting the canvas width/height always clears the contents, even if size does not change! */
+	private static function __initCanvas (graphics:Graphics):Void {
 		
 		#if (js && html5)
 		
-		graphics.__update ();
+		var width = graphics.__width;
+		var height = graphics.__height;
 		
-		if (graphics.__dirty) {
+		if (!graphics.__visible || graphics.__commands.length == 0 || graphics.__bounds == null || width < 1 || height < 1) {
 			
-			hitTesting = false;
+			graphics.__canvas = null;
+			graphics.__context = null;
+			graphics.__bitmap = null;
 			
-			CanvasGraphics.graphics = graphics;
-			CanvasGraphics.allowSmoothing = renderSession.allowSmoothing;
-			bounds = graphics.__bounds;
+		} else {
 			
-			var width = graphics.__width;
-			var height = graphics.__height;
+			if (graphics.__canvas == null) {
+				
+				graphics.__canvas = cast Browser.document.createElement ("canvas");
+				graphics.__context = graphics.__canvas.getContext ("2d");
+				
+			}
 			
-			if (!graphics.__visible || graphics.__commands.length == 0 || bounds == null || width < 1 || height < 1) {
-				
-				graphics.__canvas = null;
-				graphics.__context = null;
-				graphics.__bitmap = null;
-				
-			} else {
-				
-				if (graphics.__canvas == null) {
-					
-					graphics.__canvas = cast Browser.document.createElement ("canvas");
-					graphics.__context = graphics.__canvas.getContext ("2d");
-					
-				}
-				
-				context = graphics.__context;
-				var transform = graphics.__renderTransform;
-				var canvas = graphics.__canvas;
+			var canvas = graphics.__canvas;
+			var context = graphics.__context;
+			
+			#if dom
 				
 				var devicePixelRatio = untyped window.devicePixelRatio || 1;
 				var scaledWidth = Std.int (width * devicePixelRatio);
 				var scaledHeight = Std.int (height * devicePixelRatio);
-				
-				#if dom
 				
 				if (canvas.width == scaledWidth && canvas.height == scaledHeight) {
 					
@@ -895,14 +885,11 @@ class CanvasGraphics {
 					
 				}
 				
-				var transform = graphics.__renderTransform;
-				context.setTransform (transform.a * devicePixelRatio, transform.b * devicePixelRatio, transform.c * devicePixelRatio, transform.d * devicePixelRatio, transform.tx * devicePixelRatio, transform.ty * devicePixelRatio);
+			#else
 				
-				#else
-				
-				if (canvas.width == scaledWidth && canvas.height == scaledHeight) {
+				if (canvas.width == width && canvas.height == height) {
 					
-					context.clearRect (0, 0, scaledWidth, scaledHeight);
+					context.clearRect (0, 0, width, height);
 					
 				} else {
 					
@@ -911,9 +898,136 @@ class CanvasGraphics {
 					
 				}
 				
-				context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+			#end
+			
+		}
+		
+		#end
+		
+	}
+	
+	
+	public static function resetTransform (graphics:Graphics, ?parentTransform:Matrix):Void {
+		
+		#if (js && html5)
+		
+		var context = graphics.__context;
+		
+		#if dom
+			
+			var devicePixelRatio = untyped window.devicePixelRatio || 1;
+			
+			var transform = graphics.__renderTransform;
+			if (parentTransform != null) {
+				transform.concat (parentTransform);	
+			}
+			
+			context.setTransform (transform.a  * devicePixelRatio,
+			                      transform.b  * devicePixelRatio,
+			                      transform.c  * devicePixelRatio,
+			                      transform.d  * devicePixelRatio,
+			                      transform.tx * devicePixelRatio,
+			                      transform.ty * devicePixelRatio);
+			
+		#else
+			
+			var transform = graphics.__renderTransform;
+			context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+			
+		#end
+		
+		#end
+		
+	}
+	
+	
+	
+	public static function renderMasked (graphics:Graphics, maskGraphics:Graphics, renderSession:RenderSession, worldTransform:Matrix, maskBounds:Rectangle, colorTransform:ColorTransform):Void {
+		
+		#if (js && html5)
+		
+		graphics.__update ();
+		
+		if (graphics.__dirty) {
+			
+			__initCanvas (graphics);
+			
+		}
+		
+		var context = graphics.__context;
+		
+		if (maskGraphics != null && context != null) {
+			
+			maskGraphics.__update ();
+			
+			if (graphics.__dirty || maskGraphics.__dirty) {
 				
-				#end
+				var wt = worldTransform;
+				var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
+				var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
+				var bm = maskBounds;//shape.__mask.getBounds( shape );
+				var tx = sx * (bm.x - maskGraphics.__bounds.x - graphics.__bounds.x);
+				var ty = sy * (bm.y - maskGraphics.__bounds.y - graphics.__bounds.y);
+				
+				var maskMatrix = maskGraphics.__renderTransform;
+				//maskMatrix.rotate( shape.__mask.rotation * Math.PI / 180 );
+				maskMatrix.translate( tx, ty );
+				
+				maskGraphics.__canvas  = graphics.__canvas;
+				maskGraphics.__context = context;
+				renderSession.context = context;
+				
+				resetTransform (maskGraphics, null);
+				
+				context.beginPath ();
+				renderMask (maskGraphics, renderSession);
+				context.clip ();
+				
+				renderSession.context = null;
+			}
+			
+		}
+		
+		__render (graphics, renderSession, null, colorTransform);
+		
+		#end
+		
+	}
+	
+	
+	public static function render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
+		
+		#if (js && html5)
+		
+		graphics.__update ();
+		
+		if (graphics.__dirty) {
+			
+			__initCanvas (graphics);
+			__render (graphics, renderSession, parentTransform, colorTransform);
+			
+		}
+		
+		#end
+	}
+	
+	
+	private static function __render (graphics:Graphics, renderSession:RenderSession, parentTransform:Matrix, colorTransform:ColorTransform):Void {
+		
+		#if (js && html5)
+		
+		if (graphics.__dirty) {
+			
+			hitTesting = false;
+			
+			if (graphics.__canvas != null) {
+				
+				CanvasGraphics.graphics = graphics;
+				CanvasGraphics.allowSmoothing = renderSession.allowSmoothing;
+				
+				bounds = graphics.__bounds;
+				context = graphics.__context;
+				resetTransform (graphics, parentTransform);
 				
 				fillCommands.clear ();
 				strokeCommands.clear ();
