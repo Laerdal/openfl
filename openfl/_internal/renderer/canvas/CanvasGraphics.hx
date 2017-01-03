@@ -882,8 +882,10 @@ class CanvasGraphics {
 	
 	public static function resetTransform (graphics:Graphics, ?parentTransform:Matrix):Void {
 		
+		#if (js && html5)
+		
 		var context = graphics.__context;
-	
+		
 		#if dom
 			
 			var devicePixelRatio = untyped window.devicePixelRatio || 1;
@@ -905,6 +907,8 @@ class CanvasGraphics {
 			var transform = graphics.__renderTransform;
 			context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
 			
+		#end
+		
 		#end
 		
 	}
