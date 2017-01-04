@@ -948,17 +948,25 @@ class CanvasGraphics {
 		
 		graphics.__update ();
 		
-		if (graphics.__dirty) {
+		var maskGraphics = mask.__graphics;
+		if (maskGraphics != null) {
+			
+			maskGraphics.__update ();
+			
+		}
+		
+		if (graphics.__dirty || (maskGraphics != null && maskGraphics.__dirty)) {
 			
 			__initCanvas (graphics);
 			
 		}
 		
 		var context = graphics.__context;
+		if (context == null) {
+			return;
+		}
 		
-		if (maskGraphics != null && context != null) {
-			
-			maskGraphics.__update ();
+		if (maskGraphics != null) {
 			
 			if (graphics.__dirty || maskGraphics.__dirty) {
 				
@@ -984,11 +992,16 @@ class CanvasGraphics {
 				context.clip ();
 				
 				renderSession.context = null;
+				
+				__render (graphics, renderSession, null, colorTransform);
+				
 			}
 			
+		} else {
+			
+			__render (graphics, renderSession, null, colorTransform);
+			
 		}
-		
-		__render (graphics, renderSession, null, colorTransform);
 		
 		#end
 		
