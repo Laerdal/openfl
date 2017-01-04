@@ -964,17 +964,16 @@ class CanvasGraphics {
 				renderMask (maskGraphics, renderSession);
 				context.clip ();
 				
+				maskGraphics.__dirty = false;
 				renderSession.context = null;
 				
-				__render (graphics, renderSession, null, colorTransform);
+				graphics.__dirty = true;
 				
 			}
 			
-		} else {
-			
-			__render (graphics, renderSession, null, colorTransform);
-			
 		}
+		
+		__render (graphics, renderSession, null, colorTransform);
 		
 		#end
 		
