@@ -920,10 +920,11 @@ class CanvasGraphics {
 	
 	
 	
-	public static function renderMasked (graphics:Graphics, maskGraphics:Graphics, renderSession:RenderSession, worldTransform:Matrix, maskBounds:Rectangle, colorTransform:ColorTransform):Void {
+	public static function renderMasked (shape:DisplayObject, mask:DisplayObject, renderSession:RenderSession):Void {
 		
 		#if (js && html5)
 		
+		var graphics = shape.__graphics;
 		graphics.__update ();
 		
 		if (graphics.__dirty) {
@@ -936,22 +937,23 @@ class CanvasGraphics {
 		if (context == null) {
 			return;
 		}
-		
+				
+		var maskGraphics = mask.__graphics;
 		if (maskGraphics != null) {
 			
 			maskGraphics.__update ();
 	
 			if (graphics.__dirty || maskGraphics.__dirty) {
 				
-				var wt = worldTransform;
+				var wt = shape.__worldTransform;
 				var sx = Math.sqrt( ( wt.a * wt.a ) + ( wt.c * wt.c ) );
 				var sy = Math.sqrt( ( wt.b * wt.b ) + ( wt.d * wt.d ) );
-				var bm = maskBounds;//shape.__mask.getBounds( shape );
+				var bm = mask.getBounds( shape );
 				var tx = sx * (bm.x - maskGraphics.__bounds.x - graphics.__bounds.x);
 				var ty = sy * (bm.y - maskGraphics.__bounds.y - graphics.__bounds.y);
 				
 				var maskMatrix = maskGraphics.__renderTransform;
-				//maskMatrix.rotate( shape.__mask.rotation * Math.PI / 180 );
+				maskMatrix.rotate( mask.rotation * Math.PI / 180 );
 				maskMatrix.translate( tx, ty );
 				
 				maskGraphics.__canvas  = graphics.__canvas;
@@ -973,7 +975,7 @@ class CanvasGraphics {
 			
 		}
 		
-		__render (graphics, renderSession, null, colorTransform);
+		__render (graphics, renderSession, null, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
 		
 		#end
 		

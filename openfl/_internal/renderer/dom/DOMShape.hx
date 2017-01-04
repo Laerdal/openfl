@@ -28,10 +28,7 @@ class DOMShape {
 			
 			if (shape.__mask != null) {
 				
-				var maskGraphics = shape.__mask.__graphics;
-				var maskBounds = shape.__mask.getBounds( shape );
-				
-				CanvasGraphics.renderMasked (graphics, maskGraphics, renderSession, shape.__worldTransform, maskBounds, shape.__worldColorTransform.__isDefault() ? null : shape.__worldColorTransform);
+				CanvasGraphics.renderMasked (shape, shape.__mask, renderSession);
 				
 			} else {
 				
