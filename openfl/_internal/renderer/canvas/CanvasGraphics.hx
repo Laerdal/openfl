@@ -933,8 +933,11 @@ class CanvasGraphics {
 		}
 		
 		var context = graphics.__context;
+		if (context == null) {
+			return;
+		}
 		
-		if (maskGraphics != null && context != null) {
+		if (maskGraphics != null) {
 			
 			maskGraphics.__update ();
 			
@@ -962,11 +965,16 @@ class CanvasGraphics {
 				context.clip ();
 				
 				renderSession.context = null;
+				
+				__render (graphics, renderSession, null, colorTransform);
+				
 			}
 			
+		} else {
+			
+			__render (graphics, renderSession, null, colorTransform);
+			
 		}
-		
-		__render (graphics, renderSession, null, colorTransform);
 		
 		#end
 		
