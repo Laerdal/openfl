@@ -289,47 +289,51 @@ class CanvasTextField {
 									
 								}
 								
-							} else if ((group.startIndex <= textField.__caretIndex && group.endIndex >= textField.__caretIndex) || (group.startIndex <= textField.__selectionIndex && group.endIndex >= textField.__selectionIndex)) {
+							} else {
 								
 								var selectionStart = Std.int (Math.min (textField.__selectionIndex, textField.__caretIndex));
 								var selectionEnd = Std.int (Math.max (textField.__selectionIndex, textField.__caretIndex));
 								
-								if (group.startIndex > selectionStart) {
+								if (group.startIndex <= selectionEnd && group.endIndex >= selectionStart) {
 									
-									selectionStart = group.startIndex;
+									if (group.startIndex > selectionStart) {
+										
+										selectionStart = group.startIndex;
+										
+									}
 									
-								}
-								
-								if (group.endIndex < selectionEnd) {
+									if (group.endIndex < selectionEnd) {
+										
+										selectionEnd = group.endIndex;
+										
+									}
 									
-									selectionEnd = group.endIndex;
+									var start, end;
 									
-								}
-								
-								var start, end;
-								
-								start = textField.getCharBoundaries (selectionStart);
-								
-								if (selectionEnd >= textEngine.text.length) {
+									start = textField.getCharBoundaries (selectionStart);
 									
-									end = textField.getCharBoundaries (textEngine.text.length - 1);
-									end.x += end.width + 2;
+									if (selectionEnd >= textEngine.text.length) {
+										
+										end = textField.getCharBoundaries (textEngine.text.length - 1);
+										end.x += end.width + 2;
+										
+									} else {
+										
+										end = textField.getCharBoundaries (selectionEnd);
+										
+									}
 									
-								} else {
-									
-									end = textField.getCharBoundaries (selectionEnd);
-									
-								}
-								
-								if (start != null && end != null) {
-									
-									context.fillStyle = "#000000";
-									context.fillRect (start.x, start.y, end.x - start.x, group.height);
-									context.fillStyle = "#FFFFFF";
-									
-									// TODO: fill only once
-									
-									context.fillText (text.substring (selectionStart, selectionEnd), scrollX + start.x, group.offsetY + offsetY + scrollY);
+									if (start != null && end != null) {
+										
+										context.fillStyle = "#000000";
+										context.fillRect (start.x, start.y, end.x - start.x, group.height);
+										context.fillStyle = "#FFFFFF";
+										
+										// TODO: fill only once
+										
+										context.fillText (text.substring (selectionStart, selectionEnd), scrollX + start.x, group.offsetY + offsetY + scrollY);
+										
+									}
 									
 								}
 								
