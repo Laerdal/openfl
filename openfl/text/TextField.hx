@@ -1497,7 +1497,7 @@ class TextField extends InteractiveObject {
 									
 									if (__regexHref.match (segment)) {
 										
-										format.url = __getAttributeMatch (__regexHref).toLowerCase ();
+										format.url = __getAttributeMatch (__regexHref);
 										
 									}
 
