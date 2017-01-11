@@ -30,6 +30,7 @@ class ApplicationMain {
 			company: "::meta.company::",
 			file: "::APP_FILE::",
 			fps: ::WIN_FPS::,
+			httpReqTimeout: ::WIN_HTTP_REQ_TIMEOUT::,
 			name: "::meta.title::",
 			orientation: "::WIN_ORIENTATION::",
 			packageName: "::meta.packageName::",
