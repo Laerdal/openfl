@@ -644,7 +644,7 @@ class TextEngine {
 		var ascent = 0.0;
 		var descent = 0.0;
 		
-		var layoutGroup, advances;
+		var layoutGroup = null, advances = null;
 		var widthValue, heightValue = 0.0;
 		
 		var previousSpaceIndex = 0;
@@ -852,7 +852,8 @@ class TextEngine {
 					if (spaceIndex == -1) spaceIndex = formatRange.end;
 					
 					advances = getAdvances (text, textIndex, spaceIndex + 1);
-					widthValue = getAdvancesWidth (advances);
+					var spaceWidth = advances[advances.length - 1];
+					widthValue = getAdvancesWidth (advances) - spaceWidth;
 					
 					if (wordWrap) {
 						
@@ -921,7 +922,8 @@ class TextEngine {
 						layoutGroup.height = heightValue;
 						layoutGroups.push (layoutGroup);
 						
-						offsetX = widthValue;
+						offsetX = widthValue + spaceWidth;
+						marginRight = spaceWidth;
 						
 						wrap = false;
 						
@@ -934,6 +936,8 @@ class TextEngine {
 								layoutGroup.endIndex = spaceIndex;
 								
 							}
+							
+							marginRight += spaceWidth;
 							
 						} else if (layoutGroup == null || lineFormat.align == JUSTIFY) {
 							
@@ -949,6 +953,7 @@ class TextEngine {
 							layoutGroup.height = heightValue;
 							layoutGroups.push (layoutGroup);
 							
+							marginRight = spaceWidth;
 							
 						} else {
 							
@@ -956,9 +961,11 @@ class TextEngine {
 							layoutGroup.advances = layoutGroup.advances.concat (advances);
 							layoutGroup.width += marginRight + widthValue;
 							
+							marginRight = spaceWidth;
+							
 						}
 						
-						offsetX += widthValue;
+						offsetX += widthValue + spaceWidth;
 						
 					}
 					
@@ -988,6 +995,10 @@ class TextEngine {
 					
 					if (formatRange.end <= previousSpaceIndex) {
 						
+						// This ensures we render continuous selection rectangles
+						layoutGroup.endIndex = textIndex;
+						layoutGroup.width += layoutGroup.advances[layoutGroup.advances.length - 1];
+						
 						layoutGroup = null;
 						nextFormatRange ();
 						
@@ -1009,19 +1020,33 @@ class TextEngine {
 					
 				} else if (textIndex < formatRange.end || textIndex == text.length) {
 					
-					layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, formatRange.end);
-					layoutGroup.advances = getAdvances (text, textIndex, formatRange.end);
-					layoutGroup.offsetX = offsetX;
-					layoutGroup.ascent = ascent;
-					layoutGroup.descent = descent;
-					layoutGroup.leading = leading;
-					layoutGroup.lineIndex = lineIndex;
-					layoutGroup.offsetY = offsetY;
-					layoutGroup.width = getAdvancesWidth (layoutGroup.advances);
-					layoutGroup.height = heightValue;
-					layoutGroups.push (layoutGroup);
-					
-					offsetX += layoutGroup.width;
+					if (layoutGroup == null) {
+						
+						layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, formatRange.end);
+						layoutGroup.advances = getAdvances (text, textIndex, formatRange.end);
+						layoutGroup.offsetX = offsetX;
+						layoutGroup.ascent = ascent;
+						layoutGroup.descent = descent;
+						layoutGroup.leading = leading;
+						layoutGroup.lineIndex = lineIndex;
+						layoutGroup.offsetY = offsetY;
+						layoutGroup.width = getAdvancesWidth (layoutGroup.advances);
+						layoutGroup.height = heightValue;
+						layoutGroups.push (layoutGroup);
+						
+						offsetX += layoutGroup.width;
+						
+					} else if (layoutGroup.startIndex != layoutGroup.endIndex) {
+						
+						advances = getAdvances (text, textIndex, formatRange.end);
+						widthValue = getAdvancesWidth (advances);
+						layoutGroup.advances = layoutGroup.advances.concat (advances);
+						layoutGroup.width += marginRight + widthValue;
+						layoutGroup.endIndex = formatRange.end;
+						
+						offsetX += widthValue;
+						
+					}
 					
 					textIndex = formatRange.end;
 					
