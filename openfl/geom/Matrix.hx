@@ -65,7 +65,13 @@ class Matrix {
 		//__cleanValues ();
 		
 	}
-	
+
+	// Non-mutating matrix multiplication of this and other.
+	public function __mul(other : Matrix) : Matrix {
+		var left = clone();
+		left.concat(other);
+		return left;
+	}
 	
 	public function copyColumnFrom (column:Int, vector3D:Vector3D):Void {
 		
