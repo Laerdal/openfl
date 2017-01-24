@@ -386,6 +386,26 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 	}
 	
+	override function __getAllBoundsWorker(
+		map : Map<DisplayObject, Rectangle>, 
+		transform : Matrix
+	) : Rectangle {
+		var bounds = new Rectangle();
+		super.__getBounds(bounds, transform);
+		if (__children.length > 0) {
+			for (child in __children) {
+				if (child.visible && child.scaleX != 0 && child.scaleY != 0) {
+					var transform2 = child.__transform.__mul(transform);
+					var childBounds = child.__getAllBoundsWorker(map, transform2);
+					bounds.__unionUpdate(childBounds);
+				}
+			}
+		}
+		map.set(this, bounds);
+
+		return bounds;
+	}
+
 	
 	private override function __getRenderBounds (rect:Rectangle, matrix:Matrix):Void {
 		

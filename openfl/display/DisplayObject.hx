@@ -232,6 +232,25 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 		
 	}
 	
+	// Calculates bounds for all the DisplayObjects in the display hierarchy 
+	// rooted here.
+	public function __getAllBounds() : Map<DisplayObject, Rectangle> {
+		var result = new Map<DisplayObject, Rectangle>();
+		__getAllBoundsWorker(result, __transform);
+		return result;
+	}
+	private function __getAllBoundsWorker(
+		map : Map<DisplayObject, Rectangle>, 
+		transform : Matrix
+	) : Rectangle {
+		var bounds = new Rectangle();
+		if (__graphics != null) {
+			__graphics.__getBounds(bounds, transform);
+		}
+		map.set(this, bounds);
+		return bounds;
+	}
+
 	
 	public function getRect (targetCoordinateSpace:DisplayObject):Rectangle {
 		
@@ -405,6 +424,16 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 		
 	}
 	
+
+	private function __isClose(left : Float, right : Float) : Bool {
+		if (left == right) {
+			return true;
+		} else if (left != 0) {
+			return Math.abs(left - right) / left < 1e-6;
+		} else {
+			return Math.abs(left - right) / right < 1e-6;
+		}
+	}
 	
 	private function __getCursor ():MouseCursor {
 		
