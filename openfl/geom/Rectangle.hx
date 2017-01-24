@@ -218,7 +218,27 @@ class Rectangle {
 		return new Rectangle (x0, y0, x1 - x0, y1 - y0);
 		
 	}
-	
+
+	// Update this rectangle to be the union of this and other.
+	public function __unionUpdate(other : Rectangle) : Void {
+		if (other.width != 0 && other.height != 0) {
+			if (width != 0 && height != 0) {
+				var x0 = if (x < other.x) x else other.x;
+				var y0 = if (y < other.y) y else other.y;
+				var x1 = if (right > other.right) right else other.right;
+				var y1 = if (bottom > other.bottom) bottom else other.bottom;
+				x = x0;
+				y = y0;
+				width = x1 - x0;
+				height = y1 - y0;
+			} else {
+				x = other.x;
+				y = other.y;
+				width = other.width;
+				height = other.height;
+			}
+		}
+	}
 	
 	public function __contract (x:Float, y:Float, width:Float, height:Float):Void {
 		
