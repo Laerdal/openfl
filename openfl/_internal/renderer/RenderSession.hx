@@ -66,6 +66,7 @@ class RenderSession {
 
 	private var minBounds:Point;
 	private var maxBounds:Point;
+	private var transformsDirty : Bool;
 	
 	
 	public function new () {
@@ -77,8 +78,11 @@ class RenderSession {
 	
 
 	public function updateCachedBitmap( shape:DisplayObject ) {
-
-		var dirty = hierarchyDirty( shape );
+		
+		var wt = shape.__worldTransform;
+		var cabm = shape.__cacheAsBitmapMatrix;
+		transformsDirty = (cabm!=null && (wt.a != cabm.a || wt.b != cabm.b || wt.c != cabm.c || wt.d != cabm.d));
+		var dirty = transformsDirty || hierarchyDirty( shape );
 
 		if (dirty) {
 
@@ -181,7 +185,8 @@ class RenderSession {
 		var graphics = shape.__graphics;
 	
 		var textField:TextField = cast shape;
-		if ( Std.is(shape, TextField) && textField.__dirty) {
+		if ( Std.is(shape, TextField) && (textField.__dirty || transformsDirty)) {
+			textField.__dirty = true;
 			#if (js && html5)
 			CanvasTextField.render (textField, this, textField.__worldTransform);
 			#elseif lime_cairo
