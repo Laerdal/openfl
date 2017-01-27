@@ -283,6 +283,7 @@ private class DropShadowShader extends Shader {
 		
 		super ();
 		
+		#if !macro
 		data.uDistance.value = [ 4 ];
 		data.uAngle.value = [ 45 * Math.PI / 180 ];
 		data.uColor.value = [ 0 ];
@@ -294,6 +295,7 @@ private class DropShadowShader extends Shader {
 		data.uInner.value = [ false ];
 		data.uKnockout.value = [ false ];
 		data.uHideObject.value = [ false ];
+		#end
 		
 	}
 		
