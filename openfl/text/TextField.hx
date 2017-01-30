@@ -579,7 +579,7 @@ class TextField extends InteractiveObject {
 		
 		if (endIndex == 0) {
 			
-			endIndex = beginIndex + 1;
+			endIndex = max;
 			
 		}
 		
