@@ -862,19 +862,41 @@ class CanvasGraphics {
 				
 			}
 			
+			var canvas  = graphics.__canvas;
+			var context = graphics.__context;
+			
 			#if dom
 				
 				var devicePixelRatio = untyped window.devicePixelRatio || 1;
 				
-				graphics.__canvas.width  = Std.int ( width * devicePixelRatio);
-				graphics.__canvas.height = Std.int (height * devicePixelRatio);
-				graphics.__canvas.style.width  =  width + "px";
-				graphics.__canvas.style.height = height + "px";
-			
+				var scaledWidth  = Std.int ( width * devicePixelRatio);
+				var scaledHeight = Std.int (height * devicePixelRatio);
+				
+				if (canvas.width != scaledWidth || canvas.height != scaledHeight) {
+					
+					canvas.width  = scaledWidth;
+					canvas.height = scaledHeight;
+					canvas.style.width  =  width + "px";
+					canvas.style.height = height + "px";	
+					
+				} else {
+					
+					context.clearRect(0, 0, scaledWidth, scaledHeight);
+					
+				}
+				
 			#else
 				
-				graphics.__canvas.width  = width;
-				graphics.__canvas.height = height;
+				if (canvas.width != width || canvas.height != height) {
+					
+					canvas.width  = width;
+					canvas.height = height;
+					
+				} else {
+					
+					context.clearRect(0, 0, width, height);
+					
+				}
 				
 			#end
 			
@@ -927,7 +949,14 @@ class CanvasGraphics {
 		var graphics = shape.__graphics;
 		graphics.__update ();
 		
-		if (graphics.__dirty) {
+		var maskGraphics = mask.__graphics;
+		if (maskGraphics != null) {
+			
+			maskGraphics.__update ();
+			
+		}
+		
+		if (graphics.__dirty || (maskGraphics != null && maskGraphics.__dirty)) {
 			
 			__initCanvas (graphics);
 			
@@ -937,12 +966,9 @@ class CanvasGraphics {
 		if (context == null) {
 			return;
 		}
-				
-		var maskGraphics = mask.__graphics;
+		
 		if (maskGraphics != null) {
 			
-			maskGraphics.__update ();
-	
 			if (graphics.__dirty || maskGraphics.__dirty) {
 				
 				var wt = shape.__worldTransform;
