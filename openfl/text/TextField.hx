@@ -1323,6 +1323,20 @@ class TextField extends InteractiveObject {
 	}
 	
 	
+	private function __setClipboard (cut = false):Void {
+		
+		Clipboard.text = __text.substring (__caretIndex, __selectionIndex);
+		
+		if (cut && __caretIndex != __selectionIndex) {
+			
+			replaceSelectedText ("");
+			dispatchEvent (new Event (Event.CHANGE, true));
+			
+		}
+		
+	}
+	
+	
 	private function __startCursorTimer ():Void {
 		
 		__cursorTimer = Timer.delay (__startCursorTimer, 600);
@@ -2498,6 +2512,20 @@ class TextField extends InteractiveObject {
 				
 			}
 			
+			if (!stage.window.onClipboard.has (window_onClipboard)) {
+				
+				stage.window.onClipboard.add (window_onClipboard);
+				
+			}
+			
+		} else {
+			
+			if (stage.window.onClipboard.has (window_onClipboard)) {
+				
+				stage.window.onClipboard.remove (window_onClipboard);
+				
+			}
+			
 		}
 		
 	}
@@ -2727,30 +2755,23 @@ class TextField extends InteractiveObject {
 				__stopCursorTimer ();
 				__startCursorTimer ();
 			
+			#if !js
 			case C:
 				
-				if (#if mac modifier.metaKey || #elseif js modifier.metaKey || #end modifier.ctrlKey) {
+				if (#if mac modifier.metaKey #else modifier.ctrlKey #end) {
 					
-					Clipboard.text = __text.substring (__caretIndex, __selectionIndex);
+					__setClipboard (false);
 					
 				}
 			
 			case X:
 				
-				if (#if mac modifier.metaKey || #elseif js modifier.metaKey || #end modifier.ctrlKey) {
+				if (#if mac modifier.metaKey #else modifier.ctrlKey #end) {
 					
-					Clipboard.text = __text.substring (__caretIndex, __selectionIndex);
-					
-					if (__caretIndex != __selectionIndex) {
-						
-						replaceSelectedText ("");
-						dispatchEvent (new Event (Event.CHANGE, true));
-						
-					}
+					__setClipboard (true);
 					
 				}
 			
-			#if !js
 			case V:
 				
 				if (#if mac modifier.metaKey #else modifier.ctrlKey #end) {
@@ -2786,6 +2807,23 @@ class TextField extends InteractiveObject {
 				}
 			
 			default:
+			
+		}
+		
+	}
+	
+	
+	private function window_onClipboard (action:ClipboardAction):Void {
+		
+		switch (action) {
+			
+			case PASTE:
+			
+				window_onTextInput (Clipboard.text);
+			
+			case CUT, COPY:
+			
+				__setClipboard (action == CUT);
 			
 		}
 		
