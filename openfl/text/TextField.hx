@@ -2503,6 +2503,10 @@ class TextField extends InteractiveObject {
 				__stopCursorTimer ();
 				__startCursorTimer ();
 				
+			} else {
+				
+				stage.window.enableTextEvents = (__selectionIndex != __caretIndex);
+				
 			}
 			
 			if (!stage.window.onClipboard.has (window_onClipboard)) {
@@ -2811,12 +2815,16 @@ class TextField extends InteractiveObject {
 		switch (action) {
 			
 			case PASTE:
-			
-				window_onTextInput (Clipboard.text);
+				
+				if (__inputEnabled) {
+					
+					window_onTextInput (Clipboard.text);
+					
+				}
 			
 			case CUT, COPY:
 			
-				__setClipboard (action == CUT);
+				__setClipboard (__inputEnabled && action == CUT);
 			
 		}
 		
