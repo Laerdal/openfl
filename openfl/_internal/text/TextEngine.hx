@@ -925,7 +925,7 @@ class TextEngine {
 				
 			} else if (formatRange.end >= spaceIndex && spaceIndex > -1 && textIndex < formatRange.end) {
 				
-				if (layoutGroup != null && previousSpaceIndex != previousBreakIndex && previousSpaceIndex == textIndex-1 && textIndex == formatRange.start && spaceIndex <= formatRange.end) {
+				if (false && layoutGroup != null && previousSpaceIndex != previousBreakIndex && previousSpaceIndex == textIndex-1 && textIndex == formatRange.start && spaceIndex <= formatRange.end) {
 					// This ensures we render contiguous selection rectangles
 					// TODO: Fix the case where a block of whitespace needs its own TextLayoutGroup
 					layoutGroup.endIndex = textIndex;
@@ -1018,7 +1018,7 @@ class TextEngine {
 						
 					} else {
 						
-						if (formatRange.start == previousSpaceIndex && textIndex - 1 == previousSpaceIndex) {
+						if (false && formatRange.start == previousSpaceIndex && textIndex - 1 == previousSpaceIndex) {
 							
 							// Grow this TextLayoutGroup to the left 1 space for contiguous selection rectangles
 							advances = getAdvances (text, previousSpaceIndex, textIndex).concat(advances);
