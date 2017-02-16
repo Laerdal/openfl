@@ -966,8 +966,6 @@ class TextEngine {
 						
 						lineIndex++;
 						
-						offsetX = 2;
-						
 						if (offsetCount > 0) {
 							
 							var bumpX = layoutGroups[layoutGroups.length - offsetCount].offsetX;
@@ -978,15 +976,15 @@ class TextEngine {
 								layoutGroup.offsetX -= bumpX;
 								layoutGroup.offsetY = offsetY;
 								layoutGroup.lineIndex = lineIndex;
-								offsetX += layoutGroup.width;
 								
 							}
 							
 						}
 						
+						// Wrap into new line
 						layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, spaceIndex);
 						layoutGroup.advances = advances;
-						layoutGroup.offsetX = offsetX;
+						layoutGroup.offsetX = 2;
 						layoutGroup.ascent = ascent;
 						layoutGroup.descent = descent;
 						layoutGroup.leading = leading;
