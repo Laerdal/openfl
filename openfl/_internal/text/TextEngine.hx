@@ -682,10 +682,10 @@ class TextEngine {
 		var ascent = 0.0;
 		var descent = 0.0;
 		
-		var layoutGroup = null, advances = null;
+		var layoutGroup:TextLayoutGroup = null, advances = null;
 		var widthValue, heightValue = 0.0;
 		
-		var previousSpaceIndex = 0, previousBreakIndex = 0;
+		var previousSpaceIndex = -1, previousBreakIndex = -1;
 		var spaceIndex = text.indexOf (" ");
 		var breakIndex = getLineBreakIndex ();
 		
@@ -895,17 +895,39 @@ class TextEngine {
 			
 			if ((breakIndex > -1) && (spaceIndex == -1 || breakIndex < spaceIndex) && (formatRange.end >= breakIndex)) {
 				
-				layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, breakIndex);
-				layoutGroup.advances = getAdvances (text, textIndex, breakIndex);
-				layoutGroup.offsetX = offsetX;
-				layoutGroup.ascent = ascent;
-				layoutGroup.descent = descent;
-				layoutGroup.leading = leading;
-				layoutGroup.lineIndex = lineIndex;
-				layoutGroup.offsetY = offsetY;
-				layoutGroup.width = getAdvancesWidth (layoutGroup.advances);
-				layoutGroup.height = heightValue;
-				layoutGroups.push (layoutGroup);
+				if (textIndex < breakIndex) {
+					
+					trace ("AA", offsetX, '"${text.substring(textIndex, breakIndex)}"');
+					if (layoutGroup == null || layoutGroup.startIndex != layoutGroup.endIndex) {
+						
+						layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, breakIndex);
+						layoutGroups.push (layoutGroup);
+						
+					} else {
+						
+						layoutGroup.format = formatRange.format;
+						layoutGroup.startIndex = textIndex;
+						layoutGroup.endIndex = breakIndex;
+						
+					}
+				
+					layoutGroup.advances = getAdvances (text, textIndex, breakIndex);
+					layoutGroup.offsetX = offsetX;
+					layoutGroup.ascent = ascent;
+					layoutGroup.descent = descent;
+					layoutGroup.leading = leading;
+					layoutGroup.lineIndex = lineIndex;
+					layoutGroup.offsetY = offsetY;
+					layoutGroup.width = getAdvancesWidth (layoutGroup.advances);
+					layoutGroup.height = heightValue;
+					layoutGroup = null;
+					
+				} else if (layoutGroup.startIndex != layoutGroup.endIndex) {
+					
+					layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 2];
+					layoutGroup = null;
+					
+				}
 				
 				offsetY += heightValue;
 				offsetX = 2;
@@ -917,11 +939,11 @@ class TextEngine {
 					
 				}
 				
+				
 				textIndex = breakIndex + 1;
 				previousBreakIndex = breakIndex;
 				breakIndex = getLineBreakIndex (textIndex);
 				lineIndex++;
-				layoutGroup = null;
 				
 			} else if (formatRange.end >= spaceIndex && spaceIndex > -1 && textIndex < formatRange.end) {
 				
@@ -932,21 +954,57 @@ class TextEngine {
 					layoutGroup.width += layoutGroup.advances[layoutGroup.advances.length - 1];
 				}
 				
-				layoutGroup = null;
+				if (layoutGroup != null && layoutGroup.startIndex != layoutGroup.endIndex){
+					
+					layoutGroup = null;
+					
+				} else {
+					trace("REUSE!");
+				}
+				
 				wrap = false;
 				
 				while (true) {
 					
 					if (textIndex == formatRange.end) break;
-					if (spaceIndex == -1) spaceIndex = formatRange.end;
+//					if (spaceIndex == -1) spaceIndex = formatRange.end;
 					
-					advances = getAdvances (text, textIndex, spaceIndex + 1);
-					var spaceWidth = advances[advances.length - 1];
-					widthValue = getAdvancesWidth (advances) - spaceWidth;
+					var endIndex = (spaceIndex+1 > formatRange.end)? formatRange.end : spaceIndex + 1;
+//					if (spaceIndex > formatRange.end) spaceIndex = formatRange.end;
+					
+//					trace("advances", '"${text.substring(textIndex, endIndex)}"');
+					advances = getAdvances (text, textIndex, endIndex);
+					widthValue = getAdvancesWidth (advances);
+					
+					
+					if (lineFormat.align == JUSTIFY) {
+						
+						if (advances.length > 0 && textIndex == previousSpaceIndex) {
+							trace("Strip first advance", "'"+text.substring(textIndex,endIndex)+"'");
+							textIndex++;
+							
+							var spaceWidth = advances.shift();
+							widthValue -= spaceWidth;
+							offsetX += spaceWidth;
+						}
+						
+						if (advances.length > 0 && endIndex == spaceIndex+1) {
+							
+							trace("Strip last advance", "'"+text.substring(textIndex,endIndex)+"'");
+							endIndex--;
+							
+							var spaceWidth = advances.pop(); //[advances.length - 1]; // .pop();
+							marginRight += spaceWidth;
+						//	offsetX += spaceWidth;
+							widthValue -= spaceWidth;
+							
+						}
+						
+					}
 					
 					if (wordWrap) {
 						
-						if (offsetX + widthValue > width - 2) {
+						if (offsetX + widthValue > width ) {
 							
 							wrap = true;
 							
@@ -955,6 +1013,22 @@ class TextEngine {
 					}
 					
 					if (wrap) {
+						trace("------------------------WRAP-----------------------", '"${text.substring(layoutGroup.startIndex, layoutGroup.endIndex)}"', layoutGroup.advances);
+						
+						if (false && textIndex == previousSpaceIndex) {
+							
+							trace("Strip first advance", "'"+text.substring(textIndex,endIndex)+"'");
+							textIndex++;
+							
+							var spaceWidth = advances.shift();
+							widthValue -= spaceWidth;
+							
+						} else if (layoutGroup != null && lineFormat.align != JUSTIFY) {
+							
+							layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 1];
+							layoutGroup.endIndex--;
+							
+						}
 						
 						offsetY += heightValue;
 						
@@ -999,7 +1073,38 @@ class TextEngine {
 							
 						}
 						
-						layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, spaceIndex);
+						
+						if (layoutGroup != null) {
+							
+					//		trace("Strip last advance", "'"+text.substring(layoutGroup.startIndex,layoutGroup.endIndex)+"'");
+					//		layoutGroup.endIndex--; // Strip space
+							
+							if (layoutGroup.startIndex == layoutGroup.endIndex) {
+								trace(layoutGroup);
+								var prevLayoutGroup = layoutGroups[layoutGroups.length-2];
+								//prevLayoutGroup.width += layoutGroup.advances[0]; //prevLayoutGroup.advances[prevLayoutGroup.advances.length - 1];
+								layoutGroup.format = formatRange.format;
+								layoutGroup.startIndex = textIndex;
+								layoutGroup.endIndex = endIndex;
+								if (layoutGroup.advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
+							} else {
+//								layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 1];
+					//			var spaceWidth = layoutGroup.advances.pop();
+								//offsetX += spaceWidth;
+					//			marginRight += spaceWidth;
+					//			layoutGroup.width -= spaceWidth;
+								layoutGroup = null;
+							}
+							
+						} // else layoutGroup = null;
+						
+						if (layoutGroup == null) {
+							layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, endIndex);	
+							layoutGroups.push (layoutGroup);
+							if (advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
+						}
+						
+						trace ("A", offsetX, widthValue, advances, '"${text.substring(textIndex, endIndex)}"');
 						layoutGroup.advances = advances;
 						layoutGroup.offsetX = offsetX;
 						layoutGroup.ascent = ascent;
@@ -1009,10 +1114,11 @@ class TextEngine {
 						layoutGroup.offsetY = offsetY;
 						layoutGroup.width = widthValue;
 						layoutGroup.height = heightValue;
-						layoutGroups.push (layoutGroup);
 						
-						offsetX = widthValue + spaceWidth;
-						marginRight = spaceWidth;
+						offsetX += widthValue;
+						marginRight = 0;
+						
+						textIndex = endIndex; //(spaceIndex < formatRange.end ? 1 : 0);
 						
 						wrap = false;
 						
@@ -1020,28 +1126,66 @@ class TextEngine {
 						
 						if (false && formatRange.start == previousSpaceIndex && textIndex - 1 == previousSpaceIndex) {
 							
+							
+							trace("'"+text.substring(formatRange.start, formatRange.end)+"'", advances);
+							
 							// Grow this TextLayoutGroup to the left 1 space for contiguous selection rectangles
 							advances = getAdvances (text, previousSpaceIndex, textIndex).concat(advances);
 							widthValue += advances[0];
-							offsetX -= advances[0];
+							var previousGroup = layoutGroups[layoutGroups.length - 1];
+						//	offsetX -= previousGroup.advances[previousGroup.advances.length - 1];
+						//	offsetX -= advances[0];
 							
 							textIndex = previousSpaceIndex;
+							
+							
+							
+							trace(text.substring(previousGroup.startIndex, previousGroup.endIndex), previousGroup.endIndex - previousGroup.startIndex, previousGroup.advances.length);
 							
 						}
 						
 						if (layoutGroup != null && textIndex == spaceIndex) {
 							
-							if (formatRange.format.align != JUSTIFY) {
+							if (lineFormat.align != JUSTIFY) {
 								
+								trace ("B1", offsetX, '"${text.substring(textIndex-3, endIndex)}"');
 								layoutGroup.endIndex = spaceIndex;
+								if (layoutGroup.advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
+							//	endIndex = spaceIndex + 1;
 								
 							}
 							
-							marginRight += spaceWidth;
+							//marginRight += spaceWidth;
 							
 						} else if (layoutGroup == null || lineFormat.align == JUSTIFY) {
 							
-							layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, spaceIndex);
+							if (layoutGroup != null) { // && (layoutGroup.endIndex - layoutGroup.startIndex) > 1) {
+								
+						//		trace("Strip last advance", "'"+text.substring(layoutGroup.startIndex,layoutGroup.endIndex)+"'");
+						//		layoutGroup.endIndex--; // Strip space
+								
+								if (layoutGroup.startIndex == layoutGroup.endIndex) {
+									layoutGroup.format = formatRange.format;
+									layoutGroup.startIndex = textIndex;
+									layoutGroup.endIndex = endIndex;
+									if (layoutGroup.advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
+								} else {
+						//			var spaceWidth = layoutGroup.advances.pop();
+									//offsetX += spaceWidth;
+						//			marginRight += spaceWidth;
+						//			layoutGroup.width -= spaceWidth;
+									layoutGroup = null;
+								}
+								
+							} //else layoutGroup = null;
+							
+							trace ("B2", offsetX, '"${text.substring(textIndex, endIndex)}"');
+							
+							if (layoutGroup == null) {
+								layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, endIndex);	
+								layoutGroups.push (layoutGroup);
+								if (advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
+							}
 							layoutGroup.advances = advances;
 							layoutGroup.offsetX = offsetX;
 							layoutGroup.ascent = ascent;
@@ -1051,54 +1195,71 @@ class TextEngine {
 							layoutGroup.offsetY = offsetY;
 							layoutGroup.width = widthValue;
 							layoutGroup.height = heightValue;
-							layoutGroups.push (layoutGroup);
 							
-							marginRight = spaceWidth;
+							//marginRight = spaceWidth;
 							
 						} else {
 							
-							layoutGroup.endIndex = spaceIndex;
+						//	endIndex = spaceIndex + 1;
+							trace ("B3", offsetX, '"${text.substring(textIndex, endIndex)}"');
+							layoutGroup.endIndex = endIndex;
 							layoutGroup.advances = layoutGroup.advances.concat (advances);
+							if (layoutGroup.advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
 							
 							//layoutGroup.width += marginRight + widthValue + spaceWidth;
-							layoutGroup.width = getAdvancesWidth (layoutGroup.advances);
-							//layoutGroup.width += widthValue + spaceWidth;
+							//layoutGroup.width = getAdvancesWidth (layoutGroup.advances);
+							layoutGroup.width += widthValue;
 							
-							marginRight = spaceWidth;
+							//marginRight = spaceWidth;
 							
 						}
 						
-						offsetX += widthValue + spaceWidth;
+						offsetX += widthValue;// + spaceWidth;
+						
+						textIndex = endIndex; // < breakIndex? endIndex : spaceIndex + 1;
 						
 					}
 					
-					textIndex = spaceIndex + 1;
-					
-					previousSpaceIndex = spaceIndex;
 					var nextSpaceIndex = text.indexOf (" ", previousSpaceIndex + 1);
+					previousSpaceIndex = spaceIndex;
 					
+					if (formatRange.end <= previousSpaceIndex) {
+						
+						trace("newrange X", previousSpaceIndex, textIndex, '"${text.substring(layoutGroup.startIndex, layoutGroup.endIndex)}"');
+						
+						layoutGroup = null;
+						textIndex = formatRange.end;
+						nextFormatRange ();
+						
+					}
 					// Check if we can continue wrapping this line until the next line-break or end-of-String.
 					// When `previousSpaceIndex == breakIndex`, the loop has finished growing layoutGroup.endIndex until the end of this line.
-					if (previousSpaceIndex != breakIndex && breakIndex > -1 && (nextSpaceIndex == -1 || nextSpaceIndex > breakIndex)) {
+					else if (previousSpaceIndex != breakIndex && breakIndex > -1 && (nextSpaceIndex == -1 || nextSpaceIndex > breakIndex)) {
 						
+						previousSpaceIndex = spaceIndex;
 						spaceIndex = breakIndex;
 						
 					} else {
 						
+						
 						if (breakIndex == previousSpaceIndex) {
+							trace("goto breakIndex", text.substring(textIndex, endIndex));
+						
+							layoutGroup.endIndex = breakIndex;
 							
-							textIndex = breakIndex;
+							if (breakIndex - layoutGroup.startIndex - layoutGroup.advances.length < 0) {
+								
+								// Newline has no size
+								layoutGroup.advances.push (0.0);
+								
+							}
+							
+							textIndex = breakIndex+1;
 							
 						}
 						
+						previousSpaceIndex = spaceIndex;
 						spaceIndex = nextSpaceIndex;
-						
-					}
-					
-					if (formatRange.end <= previousSpaceIndex) {
-						
-						layoutGroup = null;
-						nextFormatRange ();
 						
 					}
 					
@@ -1114,12 +1275,14 @@ class TextEngine {
 				
 				if (textIndex > formatRange.end) {
 					
+					trace ("end range");
 					break;
 					
 				} else if (textIndex < formatRange.end || textIndex == text.length) {
 					
 					if (layoutGroup == null) {
 						
+						trace ("C", offsetX, text.substring(textIndex, formatRange.end));
 						layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, formatRange.end);
 						layoutGroup.advances = getAdvances (text, textIndex, formatRange.end);
 						layoutGroup.offsetX = offsetX;
@@ -1132,15 +1295,20 @@ class TextEngine {
 						layoutGroup.height = heightValue;
 						layoutGroups.push (layoutGroup);
 						
+						if (layoutGroup.advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
+						
 						offsetX += layoutGroup.width;
 						
 					} else if (layoutGroup.startIndex != layoutGroup.endIndex) {
 						
+						trace ("D", offsetX, text.substring(textIndex, formatRange.end));
 						advances = getAdvances (text, textIndex, formatRange.end);
 						widthValue = getAdvancesWidth (advances);
 						layoutGroup.advances = layoutGroup.advances.concat (advances);
 						layoutGroup.width += marginRight + widthValue;
 						layoutGroup.endIndex = formatRange.end;
+						
+						if (layoutGroup.advances.length - (layoutGroup.endIndex - layoutGroup.startIndex) != 0) trace("advances length mismatch");
 						
 						offsetX += widthValue;
 						
@@ -1154,6 +1322,8 @@ class TextEngine {
 				
 				if (textIndex == formatRange.end) {
 					
+					trace ("E", offsetX, text.substring(layoutGroup.startIndex, formatRange.end));
+					//layoutGroup = null;
 					textIndex++;
 					break;
 					
@@ -1161,6 +1331,10 @@ class TextEngine {
 				
 			}
 			
+		}
+
+		for (lg in layoutGroups) {
+			trace("LG", lg.advances.length - (lg.endIndex - lg.startIndex), "line:"+lg.lineIndex, "w:"+lg.width, "x:"+Std.int(lg.offsetX), "y:"+Std.int(lg.offsetY), '"${text.substring(lg.startIndex, lg.endIndex)}"', lg.startIndex, lg.endIndex);
 		}
 		
 	}
@@ -1207,6 +1381,8 @@ class TextEngine {
 						}
 					
 					case JUSTIFY:
+					
+						trace("Line width", lineWidths[lineIndex]);
 						
 						if (lineWidths[lineIndex] < width - 4) {
 							

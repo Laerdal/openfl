@@ -330,6 +330,7 @@ class CanvasTextField {
 									
 									// TODO: fill only once
 									
+									trace (selectionStart, selectionEnd, scrollX + start.x, group.offsetY + offsetY + scrollY);
 									context.fillText (text.substring (selectionStart, selectionEnd), scrollX + start.x, group.offsetY + offsetY + scrollY);
 									
 								}
