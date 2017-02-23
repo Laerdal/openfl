@@ -689,7 +689,6 @@ class TextEngine {
 		var spaceIndex = text.indexOf (" ");
 		var breakIndex = getLineBreakIndex ();
 		
-		var marginRight = 0.0;
 		var offsetX = 2.0;
 		var offsetY = 2.0;
 		var textIndex = 0;
@@ -992,7 +991,6 @@ class TextEngine {
 							endIndex--;
 							
 							var spaceWidth = advances.pop();
-							marginRight += spaceWidth;
 							widthValue -= spaceWidth;
 							
 						}
@@ -1080,7 +1078,6 @@ class TextEngine {
 						layoutGroup.height = heightValue;
 						
 						offsetX += widthValue;
-						marginRight = 0;
 						
 						textIndex = endIndex;
 						
