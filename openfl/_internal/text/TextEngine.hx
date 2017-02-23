@@ -969,7 +969,7 @@ class TextEngine {
 				while (true) {
 					
 					if (textIndex == formatRange.end) break;
-//					if (spaceIndex == -1) spaceIndex = formatRange.end;
+					if (spaceIndex == -1) spaceIndex = formatRange.end;
 					
 					var endIndex = (spaceIndex+1 > formatRange.end)? formatRange.end : spaceIndex + 1;
 //					if (spaceIndex > formatRange.end) spaceIndex = formatRange.end;
@@ -1237,7 +1237,7 @@ class TextEngine {
 						// Check if we can continue wrapping this line until the next line-break or end-of-String.
 						// When `previousSpaceIndex == breakIndex`, the loop has finished growing layoutGroup.endIndex until the end of this line.
 						
-						if (breakIndex == previousSpaceIndex) {
+						if (breakIndex >= 0 && breakIndex == previousSpaceIndex) {
 							trace("goto breakIndex", text.substring(textIndex, endIndex), lineIndex);
 						
 							layoutGroup.endIndex = breakIndex;
