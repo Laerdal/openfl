@@ -975,7 +975,7 @@ class TextEngine {
 					var endIndex = (spaceIndex+1 > formatRange.end)? formatRange.end : spaceIndex + 1;
 //					if (spaceIndex > formatRange.end) spaceIndex = formatRange.end;
 					
-//					trace("advances", '"${text.substring(textIndex, endIndex)}"');
+					trace("advances", '"${text.substring(textIndex, endIndex)}"');
 					advances = getAdvances (text, textIndex, endIndex);
 					widthValue = getAdvancesWidth (advances);
 					
@@ -1016,7 +1016,7 @@ class TextEngine {
 					}
 					
 					if (wrap) {
-						trace("------------------------WRAP-----------------------", '"${text.substring(layoutGroup.startIndex, layoutGroup.endIndex)}"', layoutGroup.advances);
+						trace("------------------------WRAP-----------------------");//, '"${text.substring(layoutGroup.startIndex, layoutGroup.endIndex)}"', layoutGroup.advances);
 						
 						if (false && textIndex == previousSpaceIndex) {
 							
