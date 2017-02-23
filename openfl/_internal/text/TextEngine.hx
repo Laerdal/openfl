@@ -1201,10 +1201,12 @@ class TextEngine {
 			}
 			
 		}
-
+		
+		#if openfl_trace_text_layout_groups
 		for (lg in layoutGroups) {
 			trace("LG", lg.advances.length - (lg.endIndex - lg.startIndex), "line:"+lg.lineIndex, "w:"+lg.width, "x:"+Std.int(lg.offsetX), "y:"+Std.int(lg.offsetY), '"${text.substring(lg.startIndex, lg.endIndex)}"', lg.startIndex, lg.endIndex);
 		}
+		#end
 		
 	}
 	
