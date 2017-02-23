@@ -1001,7 +1001,7 @@ class TextEngine {
 					
 					if (wordWrap) {
 						
-						if (offsetX + widthValue > width ) {
+						if (offsetX + widthValue > width) {
 							
 							wrap = true;
 							
