@@ -1010,10 +1010,16 @@ class TextEngine {
 					
 					if (wrap) {
 						
-						if (layoutGroup != null && lineFormat.align != JUSTIFY) {
+						if (lineFormat.align != JUSTIFY) {
 							
-							layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 1];
-							layoutGroup.endIndex--;
+							var previous = layoutGroup;
+							if (previous == null) {
+								previous = layoutGroups[layoutGroups.length - 1];
+							}
+							
+							// For correct selection rectangles and alignment, trim the trailing space of the previous line:
+							previous.width -= previous.advances[previous.advances.length - 1];
+							previous.endIndex--;
 							
 						}
 						
@@ -1120,7 +1126,7 @@ class TextEngine {
 						
 					}
 					
-					var nextSpaceIndex = text.indexOf (" ", previousSpaceIndex + 1);
+					var nextSpaceIndex = text.indexOf (" ", textIndex);
 					
 					if (formatRange.end <= previousSpaceIndex) {
 						
