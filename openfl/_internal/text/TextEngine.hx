@@ -895,7 +895,7 @@ class TextEngine {
 			
 			if ((breakIndex > -1) && (spaceIndex == -1 || breakIndex < spaceIndex) && (formatRange.end >= breakIndex)) {
 				
-				if (textIndex < breakIndex) {
+				if (textIndex <= breakIndex) {
 					
 					trace ("AA", offsetX, '"${text.substring(textIndex, breakIndex)}"');
 					if (layoutGroup == null || layoutGroup.startIndex != layoutGroup.endIndex) {
@@ -922,11 +922,14 @@ class TextEngine {
 					layoutGroup.height = heightValue;
 					layoutGroup = null;
 					
-				} else if (layoutGroup.startIndex != layoutGroup.endIndex) {
+				} else if (layoutGroup != null && layoutGroup.startIndex != layoutGroup.endIndex) {
 					
+					trace ("AA2", lineIndex);
 					layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 2];
 					layoutGroup = null;
 					
+				} else {
+					trace ("whuut");
 				}
 				
 				offsetY += heightValue;
@@ -1221,7 +1224,6 @@ class TextEngine {
 					}
 					
 					var nextSpaceIndex = text.indexOf (" ", previousSpaceIndex + 1);
-					previousSpaceIndex = spaceIndex;
 					
 					if (formatRange.end <= previousSpaceIndex) {
 						
@@ -1231,19 +1233,13 @@ class TextEngine {
 						textIndex = formatRange.end;
 						nextFormatRange ();
 						
-					}
-					// Check if we can continue wrapping this line until the next line-break or end-of-String.
-					// When `previousSpaceIndex == breakIndex`, the loop has finished growing layoutGroup.endIndex until the end of this line.
-					else if (previousSpaceIndex != breakIndex && breakIndex > -1 && (nextSpaceIndex == -1 || nextSpaceIndex > breakIndex)) {
-						
-						previousSpaceIndex = spaceIndex;
-						spaceIndex = breakIndex;
-						
 					} else {
 						
+						// Check if we can continue wrapping this line until the next line-break or end-of-String.
+						// When `previousSpaceIndex == breakIndex`, the loop has finished growing layoutGroup.endIndex until the end of this line.
 						
 						if (breakIndex == previousSpaceIndex) {
-							trace("goto breakIndex", text.substring(textIndex, endIndex));
+							trace("goto breakIndex", text.substring(textIndex, endIndex), lineIndex);
 						
 							layoutGroup.endIndex = breakIndex;
 							
