@@ -976,22 +976,23 @@ class TextEngine {
 					if (lineFormat.align == JUSTIFY) {
 						
 						if (advances.length > 0 && textIndex == previousSpaceIndex) {
-							trace("Strip first advance", "'"+text.substring(textIndex,endIndex)+"'");
+							
+							// Trim left space of this word
 							textIndex++;
 							
 							var spaceWidth = advances.shift();
 							widthValue -= spaceWidth;
 							offsetX += spaceWidth;
+							
 						}
 						
 						if (advances.length > 0 && endIndex == spaceIndex+1) {
 							
-							trace("Strip last advance", "'"+text.substring(textIndex,endIndex)+"'");
+							// Trim right space of this word
 							endIndex--;
 							
-							var spaceWidth = advances.pop(); //[advances.length - 1]; // .pop();
+							var spaceWidth = advances.pop();
 							marginRight += spaceWidth;
-						//	offsetX += spaceWidth;
 							widthValue -= spaceWidth;
 							
 						}
