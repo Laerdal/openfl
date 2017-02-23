@@ -1215,6 +1215,9 @@ class TextEngine {
 							
 							//marginRight = spaceWidth;
 							
+							// If next char is newline, process that immediately and prevent useless extra layout groups
+							if (breakIndex == endIndex) endIndex++;
+							
 						}
 						
 						offsetX += widthValue;// + spaceWidth;
