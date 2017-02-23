@@ -930,11 +930,11 @@ class TextEngine {
 					
 				} else if (layoutGroup != null && layoutGroup.startIndex != layoutGroup.endIndex) {
 					
-					layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 2];
+					// Trim the last space from the line width, for correct TextFormatAlign.RIGHT alignment
+					layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 1];
+					
 					layoutGroup = null;
 					
-				} else {
-					trace ("whuut");
 				}
 				
 				offsetY += heightValue;
