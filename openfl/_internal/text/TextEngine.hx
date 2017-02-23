@@ -1193,8 +1193,6 @@ class TextEngine {
 				
 				if (textIndex == formatRange.end) {
 					
-					trace ("E", offsetX, text.substring(layoutGroup.startIndex, formatRange.end));
-					//layoutGroup = null;
 					textIndex++;
 					break;
 					
