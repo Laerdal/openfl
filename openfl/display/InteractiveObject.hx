@@ -19,9 +19,10 @@ class InteractiveObject extends DisplayObject {
 	
 	public var softKeyboardInputAreaOfInterest:Rectangle;
 	public var tabEnabled (get, set):Bool;
-	public var tabIndex:Int;
+	public var tabIndex (get, set):Int;
 	
 	private var __tabEnabled:Bool;
+	private var __tabIndex:Int;
 	
 	
 	public function new () {
@@ -32,7 +33,7 @@ class InteractiveObject extends DisplayObject {
 		mouseEnabled = true;
 		needsSoftKeyboard = false;
 		__tabEnabled = false;
-		tabIndex = -1;
+		__tabIndex = -1;
 		
 	}
 	
@@ -90,6 +91,20 @@ class InteractiveObject extends DisplayObject {
 	private function set_tabEnabled (value:Bool):Bool {
 		
 		return __tabEnabled = value;
+		
+	}
+	
+	
+	private function get_tabIndex ():Int {
+		
+		return __tabIndex;
+		
+	}
+	
+	
+	private function set_tabIndex (value:Int):Int {
+		
+		return __tabIndex = value;
 		
 	}
 	
