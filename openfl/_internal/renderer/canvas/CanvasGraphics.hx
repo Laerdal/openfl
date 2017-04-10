@@ -922,9 +922,12 @@ class CanvasGraphics {
 				
 				#else
 				
-				if (canvas.width == scaledWidth && canvas.height == scaledHeight) {
+				if (canvas.width == width && canvas.height == height) {
 					
-					context.clearRect (0, 0, scaledWidth, scaledHeight);
+					context.save();
+					context.setTransform(1, 0, 0, 1, 0, 0);
+					context.clearRect (0, 0, width, height);
+					context.restore();
 					
 				} else {
 					
