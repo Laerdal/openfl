@@ -889,7 +889,10 @@ class CanvasGraphics {
 				
 				if (canvas.width == width && canvas.height == height) {
 					
+					context.save();
+					context.setTransform(1, 0, 0, 1, 0, 0);
 					context.clearRect (0, 0, width, height);
+					context.restore();
 					
 				} else {
 					
