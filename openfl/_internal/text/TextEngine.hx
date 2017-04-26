@@ -958,9 +958,10 @@ class TextEngine {
 					
 				} else if (layoutGroup != null && layoutGroup.startIndex != layoutGroup.endIndex) {
 					
-					// Trim the last space from the line width, for correct TextFormatAlign.RIGHT alignment
-					layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 1];
-					
+					// Trim the last space (when the last char is a space) from the line width, for correct TextFormatAlign.RIGHT alignment
+					if ( previousSpaceIndex == layoutGroup.advances.length - 1 ) {
+						layoutGroup.width -= layoutGroup.advances[layoutGroup.advances.length - 1];
+					}
 					layoutGroup = null;
 					
 				}
