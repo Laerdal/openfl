@@ -117,6 +117,11 @@ class RenderSession {
 				flatten( shape, shape.__cachedBitmap );
 
 				clearDirtyFlags( shape );
+				
+				shape.__cacheAsBitmapMatrix.a = shape.__worldTransform.a;
+				shape.__cacheAsBitmapMatrix.b = shape.__worldTransform.b;
+				shape.__cacheAsBitmapMatrix.c = shape.__worldTransform.c;
+				shape.__cacheAsBitmapMatrix.d = shape.__worldTransform.d;
 
 			} else {
 
