@@ -260,23 +260,23 @@ class CairoTextField {
 						
 						// Hack, force outline
 						
-						if (Std.is (textField.__filters[0], GlowFilter)) {
+						// if (Std.is (textField.__filters[0], GlowFilter)) {
 							
-							cairo.textPath (text.substring (group.startIndex, group.endIndex));
+						// 	cairo.textPath (text.substring (group.startIndex, group.endIndex));
 							
-							var glowFilter:GlowFilter = cast textField.__filters[0];
+						// 	var glowFilter:GlowFilter = cast textField.__filters[0];
 							
-							setSourceRGBA(cairo, colorTransform, glowFilter.color, glowFilter.alpha);
+						// 	setSourceRGBA(cairo, colorTransform, glowFilter.color, glowFilter.alpha);
 							
-							cairo.lineWidth = Math.max (glowFilter.blurX, glowFilter.blurY);
-							cairo.strokePreserve ();
+						// 	cairo.lineWidth = Math.max (glowFilter.blurX, glowFilter.blurY);
+						// 	cairo.strokePreserve ();
 							
-							setSourceRGB(cairo, colorTransform, group.format.color);
+						// 	setSourceRGB(cairo, colorTransform, group.format.color);
 							
-							cairo.fillPreserve ();
-							usedHack = true;
+						// 	cairo.fillPreserve ();
+						// 	usedHack = true;
 							
-						}
+						// }
 						
 					}
 					

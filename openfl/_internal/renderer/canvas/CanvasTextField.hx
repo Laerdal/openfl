@@ -285,21 +285,21 @@ class CanvasTextField {
 							
 							// Hack, force outline
 							
-							if (Std.is (textField.__filters[0], GlowFilter)) {
+							// if (Std.is (textField.__filters[0], GlowFilter)) {
 								
-								var glowFilter:GlowFilter = cast textField.__filters[0];
+							// 	var glowFilter:GlowFilter = cast textField.__filters[0];
 								
-								var cacheAlpha = context.globalAlpha;
-								context.globalAlpha = cacheAlpha * glowFilter.alpha;
+							// 	var cacheAlpha = context.globalAlpha;
+							// 	context.globalAlpha = cacheAlpha * glowFilter.alpha;
 								
-								context.strokeStyle = "#" + StringTools.hex (glowFilter.color & 0xFFFFFF, 6);
-								context.lineWidth = Math.max (glowFilter.blurX, glowFilter.blurY);
-								context.strokeText (text.substring (group.startIndex, group.endIndex), group.offsetX + scrollX, group.offsetY + offsetY + scrollY);
+							// 	context.strokeStyle = "#" + StringTools.hex (glowFilter.color & 0xFFFFFF, 6);
+							// 	context.lineWidth = Math.max (glowFilter.blurX, glowFilter.blurY);
+							// 	context.strokeText (text.substring (group.startIndex, group.endIndex), group.offsetX + scrollX, group.offsetY + offsetY + scrollY);
 								
-								context.strokeStyle = null;
-								context.globalAlpha = cacheAlpha;
+							// 	context.strokeStyle = null;
+							// 	context.globalAlpha = cacheAlpha;
 								
-							}
+							// }
 							
 						}
 						
