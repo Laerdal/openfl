@@ -845,7 +845,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 			
 			if (!__worldColorTransform.__equals (transform.colorTransform)) {
 				
-				__worldColorTransform = transform.colorTransform.__clone ();
+				__worldColorTransform.__setTo (transform.colorTransform);
 				
 			}
 			
