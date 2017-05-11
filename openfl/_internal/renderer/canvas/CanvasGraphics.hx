@@ -533,6 +533,36 @@ class CanvasGraphics {
 		
 	}
 	
+	private static function roundPx (halfPixelOffset, px:Float) {
+		#if (js && html5)
+		var pxRemainder = px % 1;
+		return (px - pxRemainder) + halfPixelOffset + (pxRemainder > halfPixelOffset? (Math.fround((pxRemainder - halfPixelOffset/4) * 2) / 2) : 0);
+		#end
+	}
+	
+	
+	private static function snapPx (command, x:Float, y:Float) {
+		
+		#if (js && html5)
+		var halfPixelOffset = (context.lineWidth % 4) / 4;
+		
+		// var xRemainder = y % 1;
+		// var yRemainder = y % 1;
+		//var lx = x - xRemainder + (Math.fround((xRemainder - halfPixelOffset/4) * 2) / 2);
+		//var ly = y - yRemainder + (Math.fround((yRemainder - halfPixelOffset) * 20) / 20);
+		// var ly = y - yRemainder + (halfPixelOffset) + (yRemainder > halfPixelOffset? (Math.fround((yRemainder - halfPixelOffset/4) * 2) / 2) : 0);
+		//var ly = y - yRemainder + (halfPixelOffset) + (yRemainder > halfPixelOffset? (Math.fround((yRemainder - halfPixelOffset/4) * 2) / 2) : 0);
+		
+		var lx = roundPx (halfPixelOffset, x);
+		var ly = roundPx (halfPixelOffset, y);
+		
+		// trace("Line | y=" + y + " | yRemainder=" + yRemainder + " to " + lx + "," + ly);
+		
+		command (lx, ly);
+		#end
+		
+	}
+	
 	
 	private static function playCommands (commands:DrawCommandBuffer, colorTransform:ColorTransform, stroke:Bool = false):Void {
 		
@@ -605,7 +635,10 @@ class CanvasGraphics {
 				case LINE_TO:
 					
 					var c = data.readLineTo ();
-					context.lineTo (c.x - offsetX, c.y - offsetY);
+					if (hasStroke)
+						snapPx (context.lineTo, c.x - offsetX, c.y - offsetY);
+					else
+						context.lineTo (c.x - offsetX, c.y - offsetY);
 					
 					positionX = c.x;
 					positionY = c.y;
@@ -613,7 +646,10 @@ class CanvasGraphics {
 				case MOVE_TO:
 					
 					var c = data.readMoveTo ();
-					context.moveTo (c.x - offsetX, c.y - offsetY);
+					if (hasStroke)
+						snapPx (context.moveTo, c.x - offsetX, c.y - offsetY);
+					else
+						context.moveTo (c.x - offsetX, c.y - offsetY);
 					
 					positionX = c.x;
 					positionY = c.y;
@@ -631,13 +667,14 @@ class CanvasGraphics {
 						
 					}
 					
-					context.moveTo (positionX - offsetX, positionY - offsetY);
-					
 					if (c.thickness == null) {
-						
+							
 						hasStroke = false;
+						context.moveTo (positionX - offsetX, positionY - offsetY);
 						
 					} else {
+						
+						snapPx (context.moveTo, positionX - offsetX, positionY - offsetY);
 						
 						context.lineWidth = (c.thickness > 0 ? c.thickness : 1);
 						
@@ -781,7 +818,10 @@ class CanvasGraphics {
 					
 					if (!optimizationUsed) {
 						
-						context.rect (c.x - offsetX, c.y - offsetY, c.width, c.height);
+						if (hasStroke)
+							snapPx (function (x,y) context.rect(x,y, c.width, c.height), c.x - offsetX, c.y - offsetY);
+						else
+							context.rect (c.x - offsetX, c.y - offsetY, c.width, c.height);
 						
 					}
 				
@@ -799,7 +839,7 @@ class CanvasGraphics {
 			
 			if (hasFill && closeGap) {
 				
-				context.lineTo (startX - offsetX, startY - offsetY);
+				snapPx (context.lineTo, startX - offsetX, startY - offsetY);
 				
 			} else if (closeGap && positionX == startX && positionY == startY) {
 				
@@ -1422,7 +1462,10 @@ class CanvasGraphics {
 					case DRAW_RECT:
 						
 						var c = data.readDrawRect ();
-						context.rect (c.x - offsetX, c.y - offsetY, c.width, c.height);
+						if (hasStroke)
+							snapPx (function(x,y) context.rect (x,y, c.width, c.height), c.x - offsetX, c.y - offsetY);
+						else
+							context.rect (c.x - offsetX, c.y - offsetY, c.width, c.height);
 					
 					case DRAW_ROUND_RECT:
 						
@@ -1432,14 +1475,17 @@ class CanvasGraphics {
 					case LINE_TO:
 						
 						var c = data.readLineTo ();
-						context.lineTo (c.x - offsetX, c.y - offsetY);
+						snapPx (context.lineTo, c.x - offsetX, c.y - offsetY);
 						positionX = c.x;
 						positionY = c.y;
 					
 					case MOVE_TO:
 						
 						var c = data.readMoveTo ();
-						context.moveTo (c.x - offsetX, c.y - offsetY);
+						if (hasStroke)
+							snapPx (context.moveTo, c.x - offsetX, c.y - offsetY);
+						else
+							context.moveTo (c.x - offsetX, c.y - offsetY);
 						positionX = c.x;
 						positionY = c.y;
 					
