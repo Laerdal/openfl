@@ -135,13 +135,14 @@ class GLShape {
 							maskMatrix.identity();
 							maskMatrix.translate( maskGraphics.__bounds.x * sx, maskGraphics.__bounds.y * sy );
 							maskMatrix.rotate( shape.mask.rotation * Math.PI / 180 );
-							maskMatrix.translate( tx, ty );
+							maskMatrix.scale( (graphics.__bitmap.width + 2) / graphics.__bitmap.width, (graphics.__bitmap.height + 2) / graphics.__bitmap.height );
+							maskMatrix.translate( ( tx ) - 1,  ( ty ) - 1 );
 							
 							if (graphics.__maskBitmap == null || graphics.__maskBitmap.width != graphics.__bitmap.width || graphics.__maskBitmap.height != graphics.__bitmap.height)
 								graphics.__maskBitmap = new BitmapData(graphics.__bitmap.width, graphics.__bitmap.height, true, 0x00000000);
 
 							graphics.__maskBitmap.fillRect( graphics.__maskBitmap.rect, 0 );
-							graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix );
+							graphics.__maskBitmap.draw( maskGraphics.__bitmap, maskMatrix, null, null, null, false );
 
 							shape.__renderedMask = graphics.__maskBitmap;
 							

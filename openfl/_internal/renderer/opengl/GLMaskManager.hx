@@ -173,7 +173,7 @@ class GLMaskManager extends AbstractMaskManager {
 			if (width < 0) width = 0;
 			if (height < 0) height = 0;
 			
-			gl.scissor (x, y, width, height);
+			gl.scissor (x-1, y-1, width+2, height+2);
 			
 		} else {
 			
