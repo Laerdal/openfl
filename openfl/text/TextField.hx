@@ -1054,13 +1054,15 @@ class TextField extends InteractiveObject implements IShaderDrawable {
 
 		__updateLayout();
 
-		var tmp = Rectangle.__temp;
+		var tmp = Rectangle.__pool.get ();
 		tmp.copyFrom(__textEngine.bounds);
 		tmp.__transform(tmp, transform);
 
 		bounds.__expand(tmp.x, tmp.y, tmp.width, tmp.height);
+		Rectangle.__pool.release (tmp);
 
 		map.set(this, bounds);
+		
 		return bounds;
 	}
 	
