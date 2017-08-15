@@ -1046,17 +1046,11 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 					}
 					
 				} else {
-
-					if (updateTransform) {
-						
-						__update (false, true);
-						
-						Matrix.__pool.release (matrix);
-						Rectangle.__pool.release (rect);
-						
-					}
-
+					
+					__cacheBitmap = null;
+					__cacheBitmapData = null;
 					return;
+					
 				}
 				
 			}
