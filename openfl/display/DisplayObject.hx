@@ -1099,7 +1099,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 				
 			}
 			
-			if (updateTransform) {
+			if (updateTransform || needRender) {
 				
 				__cacheBitmap.__worldTransform.copyFrom (__worldTransform);
 				
