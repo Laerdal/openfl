@@ -395,7 +395,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		for (child in __children) {
 			
-			if (child.visible == false || child.__scaleX == 0 || child.__scaleY == 0) continue;
+			if (child.visible == false || child.__scaleX == 0 || child.__scaleY == 0 || child.__isMask) continue;
 			child.__getBounds (rect, child.__worldTransform);
 			
 		}
@@ -857,6 +857,12 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			for (child in __children) {
 				
+				if (mask != null && child != mask) {
+					child.__parentMask = mask;
+				} else if (__parentMask != null && child != __parentMask) {
+					child.__parentMask = __parentMask;
+				}
+
 				child.__renderGL (renderSession);
 				child.__renderDirty = false;
 				
