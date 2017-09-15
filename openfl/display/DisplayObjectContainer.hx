@@ -721,7 +721,8 @@ class DisplayObjectContainer extends InteractiveObject {
 				
 			}
 			
-			__renderDirty = false;
+			if (!__isMask)
+				__renderDirty = false;
 			
 		} else {
 			
@@ -864,11 +865,16 @@ class DisplayObjectContainer extends InteractiveObject {
 				}
 
 				child.__renderGL (renderSession);
-				child.__renderDirty = false;
+				if (!child.__isMask)
+					child.__renderDirty = false;
 				
 			}
 			
-			__renderDirty = false;
+			if (!__isMask)
+				__renderDirty = false;
+
+			if (__mask != null)
+				__mask.__renderDirty = false;
 			
 		} else {
 			
