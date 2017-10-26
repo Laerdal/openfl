@@ -1037,23 +1037,6 @@ class TextField extends InteractiveObject {
 		rect.__expand (bounds.x, bounds.y, bounds.width, bounds.height);
 		
 	}
-	override function __getAllBoundsWorker(
-		map : Map<DisplayObject, Rectangle>, 
-		transform : Matrix
-	) : Rectangle {
-		var bounds = new Rectangle();
-
-		__updateLayout();
-
-		var tmp = Rectangle.__temp;
-		tmp.copyFrom(__textEngine.bounds);
-		tmp.__transform(tmp, transform);
-
-		bounds.__expand(tmp.x, tmp.y, tmp.width, tmp.height);
-
-		map.set(this, bounds);
-		return bounds;
-	}
 	
 	
 	private function __getCharIndexOnDifferentLine (charIndex:Int, lineIndex:Int):Int {

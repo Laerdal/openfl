@@ -243,27 +243,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if openf
 		
 	}
 	
-	// Calculates bounds for all the DisplayObjects in the display hierarchy 
-	// rooted here.
-	public function __getAllBounds() : DisplayObject -> Rectangle 
-	{
-		var result = new Map<DisplayObject, Rectangle>();
-		__getAllBoundsWorker(result, __transform);
-		
-		return function(d : DisplayObject) { return result.get(d); };
-	}
-	private function __getAllBoundsWorker(
-		map : Map<DisplayObject, Rectangle>, 
-		transform : Matrix
-	) : Rectangle {
-		var bounds = new Rectangle();
-		if (__graphics != null) {
-			__graphics.__getBounds(bounds, transform);
-		}
-		map.set(this, bounds);
-		return bounds;
-	}
-
 	
 	public function getRect (targetCoordinateSpace:DisplayObject):Rectangle {
 		
